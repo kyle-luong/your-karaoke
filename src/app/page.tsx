@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Player from "@/components/player";
 import type { Song } from "@/lib/types/database";
 
 export default async function LibraryPage() {
@@ -15,6 +16,10 @@ export default async function LibraryPage() {
           Transform songs into AI-generated parodies and sing together
         </p>
       </header>
+
+      <div className="mb-12 flex justify-center">
+        <Player />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {(songs as Song[] | null)?.map((song) => (
