@@ -4,13 +4,15 @@ const ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/text-to-speech";
 
 export async function generateNarration(
   text: string,
-  versionId: string
+  versionId: string,
 ): Promise<string | null> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const voiceId = process.env.ELEVENLABS_VOICE_ID;
 
   if (!apiKey || !voiceId) {
-    console.warn("[elevenlabs] Missing API key or voice ID — skipping narration");
+    console.warn(
+      "[elevenlabs] Missing API key or voice ID - skipping narration",
+    );
     return null;
   }
 
