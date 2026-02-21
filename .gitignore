@@ -44,3 +44,5 @@ next-env.d.ts
 
 # local only files (not commited)
 *.local.*
+
+*.local.md
