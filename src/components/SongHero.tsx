@@ -94,7 +94,7 @@ export default function SongHero({ song }: SongHeroProps) {
 
                 {/* Play button */}
                 <Link
-                    href={`/songs/karaoke`}
+                    href={`/songs/karaoke?play=${song.id}`}
                     className="inline-flex items-center gap-2 mt-2 px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-fit"
                 >
                     <Play className="size-5 fill-current" />
