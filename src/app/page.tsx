@@ -7,11 +7,11 @@ import { Mic2, Music, Guitar, Zap, Heart, Disc, Sparkles } from "lucide-react";
 import type { Song } from "@/lib/types/database";
 
 const CATEGORIES = [
-  { name: "Rap", icon: Mic2, color: "text-blue-500", route: "/categories/1" },
-  { name: "Pop", icon: Music, color: "text-pink-500", route: "/categories/1"},
-  { name: "Country", icon: Guitar, color: "text-orange-500", route: "/categories/1"},
-  { name: "Rock", icon: Zap, color: "text-yellow-500", route: "/categories/1"},
-  { name: "R&B", icon: Heart, color: "text-red-500", route: "/categories/1"},
+  { name: "Rap", icon: Mic2, color: "text-blue-500", route: "/categories/rap" },
+  { name: "Pop", icon: Music, color: "text-pink-500", route: "/categories/pop" },
+  { name: "Country", icon: Guitar, color: "text-orange-500", route: "/categories/country" },
+  { name: "Rock", icon: Zap, color: "text-yellow-500", route: "/categories/rock" },
+  { name: "R&B", icon: Heart, color: "text-red-500", route: "/categories/rnb" },
 ];
 
 export default async function LibraryPage() {
