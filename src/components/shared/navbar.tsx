@@ -28,7 +28,7 @@ export function Navbar({
             <Beaker className="size-6 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold tracking-tight uppercase">
-            Lyric<span className="text-primary">Lab</span>
+            Lyric<span className="text-primary"> Lab</span>
           </span>
         </Link>
 
