@@ -306,38 +306,17 @@ export default function RemixModal({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 shrink-0">
-              {audioUrl ? (
-                <Button
-                  asChild
-                  variant="outline"
-                  className="font-bold uppercase tracking-tight gap-2"
-                >
-                  <a href={audioUrl} target="_blank" rel="noopener noreferrer">
-                    <Play className="size-4" />
-                    Listen
-                  </a>
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  disabled
-                  className="font-bold uppercase tracking-tight gap-2"
-                >
-                  <Play className="size-4" />
-                  Listen
-                </Button>
-              )}
+            {result.versionId && (
               <Button
                 asChild
-                className="font-bold uppercase tracking-tight gap-2 bg-primary"
+                className="w-full font-bold uppercase tracking-tight gap-2"
               >
-                <Link href={`/project/new?songId=${songId}`}>
-                  <Sparkles className="size-4" />
-                  Make Singing Version
+                <Link href={`/songs/karaoke?play=${songId}&versionId=${result.versionId}`}>
+                  <Play className="size-4 fill-current" />
+                  Play Now
                 </Link>
               </Button>
-            </div>
+            )}
 
             <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-600 text-xs shrink-0">
               <CheckCircle2 className="size-4 shrink-0" />
