@@ -328,7 +328,6 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
         <QueuedPlayer
           initialQueue={queue}
           compact={true}
-          key={queue.map((q) => q.id).join(',')}
         />
       </aside>
     </div>
