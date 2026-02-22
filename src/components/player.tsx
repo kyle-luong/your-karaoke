@@ -19,13 +19,23 @@ const BG_COLORS = [
 const getRandomColor = () =>
   BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
 
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  audioUrl: string;
+  lyricsUrl?: string;
+  lyrics?: Array<{ timestamp: number; text: string }>;
+}
+
 interface PlayerProps {
-  audioUrl?: string;
+  song?: Song;
+  onSongEnd?: () => void;
   lyrics?: Array<{ timestamp: number; text: string }>;
   compact?: boolean;
 }
 
-export default function Player({ audioUrl, lyrics: propLyrics, compact = true }: PlayerProps = {}) {
+export default function Player({ song, onSongEnd, lyrics: propLyrics, compact = true }: PlayerProps = {}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -44,7 +54,19 @@ export default function Player({ audioUrl, lyrics: propLyrics, compact = true }:
 
     if (propLyrics && propLyrics.length > 0) {
       setLyrics(propLyrics);
-      if (audioRef.current) audioRef.current.src = audioUrl || "/demo/songs/i-wonder.mp3";
+      if (song?.audioUrl && audioRef.current) {
+        audioRef.current.src = song.audioUrl;
+      }
+      setBgColor(getRandomColor());
+      setIsLoading(false);
+      return;
+    }
+
+    if (song?.lyrics && song.lyrics.length > 0) {
+      setLyrics(song.lyrics);
+      if (song.audioUrl && audioRef.current) {
+        audioRef.current.src = song.audioUrl;
+      }
       setBgColor(getRandomColor());
       setIsLoading(false);
       return;
@@ -52,12 +74,16 @@ export default function Player({ audioUrl, lyrics: propLyrics, compact = true }:
 
     const init = async () => {
       try {
-        const lrcContent = await fetch("/demo/lrcs/i-wonder.txt").then((r) =>
-          r.text(),
-        );
-        if (cancelled) return;
-        if (audioRef.current) audioRef.current.src = audioUrl || "/demo/songs/i-wonder.mp3";
-        setLyrics(parseLrcContent(lrcContent));
+        if (song?.lyricsUrl) {
+          const lrcContent = await fetch(song.lyricsUrl).then((r) => r.text());
+          if (cancelled) return;
+          if (song.audioUrl && audioRef.current) {
+            audioRef.current.src = song.audioUrl;
+          }
+          setLyrics(parseLrcContent(lrcContent));
+        } else if (song?.audioUrl && audioRef.current) {
+          audioRef.current.src = song.audioUrl;
+        }
         setBgColor(getRandomColor());
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -67,7 +93,7 @@ export default function Player({ audioUrl, lyrics: propLyrics, compact = true }:
     return () => {
       cancelled = true;
     };
-  }, [audioUrl, propLyrics]);
+  }, [song, propLyrics]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -76,17 +102,23 @@ export default function Player({ audioUrl, lyrics: propLyrics, compact = true }:
     const onMeta = () => setDuration(audio.duration);
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
+    const onEnded = () => {
+      setIsPlaying(false);
+      if (onSongEnd) onSongEnd();
+    };
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onMeta);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
+    audio.addEventListener("ended", onEnded);
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", onMeta);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("ended", onEnded);
     };
-  }, []);
+  }, [onSongEnd]);
 
   useEffect(() => {
     let idx = -1;

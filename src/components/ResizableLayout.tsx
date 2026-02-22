@@ -15,28 +15,8 @@ import {
   Users,
 } from 'lucide-react';
 import SongBrowser from '@/components/SongBrowser';
-import Player from '@/components/player';
-import SongQueue from '@/components/SongQueue';
+import QueuedPlayer from '@/components/QueuedPlayer';
 import type { Song } from '@/lib/types/database';
-
-const PLAYLISTS = [
-  {
-    name: 'Karaoke Classics',
-    emoji: '🎤',
-    gradient: 'from-pink-600 to-purple-900',
-  },
-  { name: 'Best Of', emoji: '⭐', gradient: 'from-orange-500 to-red-800' },
-  {
-    name: 'Legends of Rock',
-    emoji: '🎸',
-    gradient: 'from-blue-600 to-indigo-900',
-  },
-  {
-    name: 'Country Classics',
-    emoji: '🤠',
-    gradient: 'from-amber-500 to-orange-800',
-  },
-];
 
 const GENRES = [
   { name: 'Rap', icon: Mic2, color: 'text-blue-500' },
@@ -132,37 +112,6 @@ export default function ResizableLayout({ songs }: ResizableLayoutProps) {
             <span className="text-6xl hidden sm:inline">🎤</span>
           </div>
 
-          {/* Playlists */}
-          <section className="space-y-5">
-            <div className="flex justify-between items-end">
-              <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
-                <Star className="size-5 text-primary" /> Playlists
-              </h2>
-              <span className="text-xs font-bold text-primary cursor-pointer hover:underline">
-                COMING SOON →
-              </span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {PLAYLISTS.map((pl) => (
-                <Card
-                  key={pl.name}
-                  className="overflow-hidden border-2 hover:-translate-y-1 transition-all cursor-pointer"
-                >
-                  <div
-                    className={`h-32 bg-gradient-to-br ${pl.gradient} flex items-center justify-center`}
-                  >
-                    <span className="text-5xl">{pl.emoji}</span>
-                  </div>
-                  <CardContent className="p-3">
-                    <p className="font-bold text-xs uppercase tracking-wide">
-                      {pl.name}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-
           {/* Genres */}
           <section className="space-y-5">
             <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
@@ -215,8 +164,7 @@ export default function ResizableLayout({ songs }: ResizableLayoutProps) {
         className="border-l border-zinc-200 bg-white overflow-y-auto flex flex-col gap-4 p-4 [&::-webkit-scrollbar]:w-0"
         style={{ width: `${sidebarWidth}px` }}
       >
-        <Player compact={true} />
-        <SongQueue />
+        <QueuedPlayer compact={true} />
       </aside>
     </div>
   );
