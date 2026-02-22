@@ -7,11 +7,11 @@ import { Mic2, Music, Guitar,Zap, Heart, Disc, Sparkles } from "lucide-react";
 import type { Song } from "@/lib/types/database";
 
 const CATEGORIES = [
-  { name: "Rap", icon: Mic2, color: "text-blue-500" },
-  { name: "Pop", icon: Music, color: "text-pink-500" },
-  { name: "Country", icon: Guitar, color: "text-orange-500" },
-  { name: "Rock", icon: Zap, color: "text-yellow-500" },
-  { name: "R&B", icon: Heart, color: "text-red-500" },
+  { name: "Rap", icon: Mic2, color: "text-blue-500", route: "/categories/1" },
+  { name: "Pop", icon: Music, color: "text-pink-500", route: "/categories/1"},
+  { name: "Country", icon: Guitar, color: "text-orange-500", route: "/categories/1"},
+  { name: "Rock", icon: Zap, color: "text-yellow-500", route: "/categories/1"},
+  { name: "R&B", icon: Heart, color: "text-red-500", route: "/categories/1"},
 ];
 
 export default async function LibraryPage() {
@@ -55,12 +55,14 @@ export default async function LibraryPage() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {CATEGORIES.map((cat) => (
-            <Card key={cat.name} className="hover:bg-accent cursor-pointer transition-all hover:-translate-y-1 group border-2">
-              <CardContent className="p-6 flex flex-col items-center gap-3">
-                <cat.icon className={`size-10 ${cat.color} group-hover:scale-110 transition-transform`} />
-                <span className="font-bold uppercase text-sm tracking-widest">{cat.name}</span>
-              </CardContent>
-            </Card>
+            <Link href={cat.route} key={cat.name}>
+              <Card className="hover:bg-accent cursor-pointer transition-all hover:-translate-y-1 group border-2">
+                <CardContent className="p-6 flex flex-col items-center gap-3">
+                  <cat.icon className={`size-10 ${cat.color} group-hover:scale-110 transition-transform`} />
+                  <span className="font-bold uppercase text-sm tracking-widest">{cat.name}</span>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </section>
