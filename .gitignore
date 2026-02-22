@@ -44,6 +44,7 @@ next-env.d.ts
 
 # generated parody outputs
 /public/generated/
+!/public/generated/00000000-0000-0000-0000-000000000001/
 
 # local only files (not commited)
 *.local.*
