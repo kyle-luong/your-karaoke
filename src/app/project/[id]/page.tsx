@@ -208,7 +208,7 @@ export default function ProjectPage() {
           {sungError && <p className="text-destructive text-sm">{sungError}</p>}
 
           {sungResult && (
-            <Player audioUrl={sungResult.mp3Url} lyrics={sungResult.parodyLrcLines} />
+            <Player lyrics={sungResult.parodyLrcLines} />
           )}
         </div>
       )}
