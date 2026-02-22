@@ -104,7 +104,7 @@ export default async function LibraryPage() {
       <ScrollSection title="Genres">
         {CATEGORIES.map((cat) => (
           <Link href={cat.route} key={cat.name} className="shrink-0">
-            <div className="w-40 h-40 rounded-xl flex flex-col items-center justify-center gap-3 bg-card border border-border/40 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group">
+            <div className="w-40 h-40 rounded-xl flex flex-col items-center justify-center gap-3 bg-card border border-border/40 hover:-translate-y-1 hover:shadow-sm transition-all cursor-pointer group">
               <cat.icon className={`size-9 ${cat.color} group-hover:scale-110 transition-transform`} />
               <span className="font-bold text-xs uppercase tracking-widest">{cat.name}</span>
             </div>
@@ -169,7 +169,7 @@ function ScrollSection({
           </Link>
         )}
       </div>
-      <div className="max-w-6xl mx-auto overflow-x-auto scrollbar-hide">
+      <div className="max-w-6xl mx-auto overflow-x-auto scrollbar-hide scroll-fade">
         <div className="flex gap-5 px-6 lg:px-10 pb-2" style={{ scrollSnapType: "x mandatory" }}>
           {children}
         </div>
@@ -182,7 +182,7 @@ function ScrollSection({
 function SongCard({ song, gradient }: { song: Song; gradient: string }) {
   return (
     <div className="w-44 group cursor-pointer" style={{ scrollSnapAlign: "start" }}>
-      <div className="w-44 h-44 rounded-xl overflow-hidden shadow-md mb-3 relative">
+      <div className="w-44 h-44 rounded-xl overflow-hidden shadow-sm mb-3 relative">
         {song.thumbnail_url ? (
           <img
             src={song.thumbnail_url}
