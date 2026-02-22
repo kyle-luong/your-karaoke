@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { Navbar } from "@/components/shared/navbar";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { Toaster } from 'sonner';
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -20,14 +22,24 @@ export default async function RootLayout({
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Detect kids subdomain — hide main navbar on kids site
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "";
+  const isKids = host.split(":")[0].startsWith("kids.");
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Navbar 
-          userEmail={user?.email} 
-          userImage={user?.user_metadata?.avatar_url} 
-        />
-        {children}
+        {!isKids && (
+          <Navbar
+            userEmail={user?.email}
+            userImage={user?.user_metadata?.avatar_url}
+          />
+        )}
+        <main>
+          {children}
+        </main>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

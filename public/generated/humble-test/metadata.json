@@ -1,0 +1,43 @@
+{
+  "parodyLrcLines": [
+    {
+      "timestamp": 1.63,
+      "text": "Nobody bakes for me"
+    },
+    {
+      "timestamp": 3.38,
+      "text": "It's been a munch day for me"
+    },
+    {
+      "timestamp": 5.05,
+      "text": "Yay (yum, yum!)"
+    },
+    {
+      "timestamp": 7.74,
+      "text": "Ayy, I remember greasy fries and extra sauce allowances"
+    },
+    {
+      "timestamp": 11.1,
+      "text": "Finesse a bro with some stale chips, but now I'm crunchin' this"
+    },
+    {
+      "timestamp": 14.49,
+      "text": "Extra cheese where my chef now lives; in fact, I'm downin' this"
+    },
+    {
+      "timestamp": 17.72,
+      "text": "Boba tea with my main squeeze tastes like sweet dreams for the influencers"
+    }
+  ],
+  "summaryNarration": "This parody takes a classic track and flips it into a deliciously silly food adventure. From craving baked goods and munching all day to remembering greasy fries, stale chips, and extra cheese, it's a journey through a teen's ultimate food fantasy. Even fancy drinks with a 'main squeeze' become sweet, influencer-worthy treats.",
+  "transformationReport": {
+    "changesCount": 7,
+    "mainTheme": "Food",
+    "toneUsed": "Silly",
+    "highlights": [
+      "Playful take on daily cravings",
+      "Relatable teen food culture references"
+    ]
+  },
+  "generatedAt": "2024-03-01T12:00:00Z"
+}

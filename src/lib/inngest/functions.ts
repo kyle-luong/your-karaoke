@@ -39,8 +39,8 @@ export const generateParodyJob = inngest.createFunction(
         .insert({
           project_id: projectId,
           type: "parody",
-          lyrics_text: result.parodyLyrics,
-          lrc_data: project.songs.lrc_data, // Re-use original timing for now
+          lyrics_text: result.parodyLrcLines.map((l) => l.line).join("\n"),
+          lrc_data: result.parodyLrcLines,
         })
         .select()
         .single();
@@ -57,5 +57,5 @@ export const generateParodyJob = inngest.createFunction(
     });
 
     return { versionId: version!.id };
-  }
+  },
 );

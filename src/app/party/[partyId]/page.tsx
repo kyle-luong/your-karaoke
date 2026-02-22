@@ -1,79 +1,48 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { usePartySync } from "@/hooks/usePartySync";
-import type { PartyStateUpdate } from "@/lib/types/party";
+import { useEffect, useState } from "react";
+import ResizableLayout from "@/components/ResizableLayout"; // Adjust path if needed
+import { Loader2 } from "lucide-react";
+import type { Song } from "@/lib/types/database";
 
 export default function PartyPage() {
   const params = useParams();
   const partyId = params.partyId as string;
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [state, setState] = useState<PartyStateUpdate>({
-    isPlaying: false,
-    playbackPositionMs: 0,
-    updatedAt: new Date().toISOString(),
-    hostId: "",
-  });
-
-  const onStateUpdate = useCallback((update: PartyStateUpdate) => {
-    setState(update);
+  // Fetch the same songs the host sees
+  useEffect(() => {
+    async function loadSongs() {
+      try {
+        const response = await fetch("/api/songs"); // Adjust to your actual songs API
+        const data = await response.json();
+        setSongs(data);
+      } catch (e) {
+        console.error("Failed to load songs", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSongs();
   }, []);
 
-  const { connected, broadcast } = usePartySync({
-    partyId,
-    onStateUpdate,
-  });
-
-  const [inviteUrl, setInviteUrl] = useState("");
-
-  useEffect(() => {
-    setInviteUrl(`${window.location.origin}/party/${partyId}`);
-  }, [partyId]);
-
-  function togglePlayback() {
-    const next: PartyStateUpdate = {
-      ...state,
-      isPlaying: !state.isPlaying,
-      updatedAt: new Date().toISOString(),
-    };
-    setState(next);
-    broadcast(next);
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white">
+        <Loader2 className="animate-spin text-primary mb-4" size={48} />
+        <h2 className="text-xl font-black uppercase italic tracking-tighter">Entering the Stage...</h2>
+      </div>
+    );
   }
 
+  // WE RENDER THE EXACT SAME COMPONENT AS THE HOST
   return (
-    <main className="container mx-auto px-4 py-8 max-w-2xl text-center">
-      <h1 className="text-2xl font-bold mb-4">Party Room</h1>
-
-      <Badge variant={connected ? "default" : "destructive"} className="mb-4">
-        {connected ? "Connected" : "Reconnecting..."}
-      </Badge>
-
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Share this link to invite friends:
-        </p>
-        <code className="block p-2 bg-muted rounded text-sm break-all">{inviteUrl}</code>
-
-        <Button onClick={() => navigator.clipboard.writeText(inviteUrl)}>
-          Copy Invite Link
-        </Button>
-
-        <div className="pt-4">
-          <Button size="lg" onClick={togglePlayback}>
-            {state.isPlaying ? "Pause" : "Play"}
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Position: {Math.floor(state.playbackPositionMs / 1000)}s
-          </p>
-        </div>
-
-        {/* TODO: Integrate wavesurfer.js karaoke player here */}
-        {/* TODO: Lyric display synced to playback position */}
-        {/* TODO: Participant count */}
-      </div>
-    </main>
+    <ResizableLayout 
+      songs={songs} 
+      initialLobbyId={partyId} 
+      isGuest={true} 
+    />
   );
 }

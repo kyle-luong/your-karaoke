@@ -4,9 +4,25 @@ import { z } from "zod/v4";
 
 // --- Request schema ---
 
-export const themeOptions = ["food", "sports", "school", "office", "custom"] as const;
-export const toneOptions = ["silly", "sarcastic", "wholesome", "dramatic"] as const;
+export const themeOptions = [
+  "food",
+  "sports",
+  "school",
+  "office",
+  "custom",
+] as const;
+export const toneOptions = [
+  "silly",
+  "sarcastic",
+  "wholesome",
+  "dramatic",
+] as const;
 export const audienceOptions = ["kids", "teens", "adults"] as const;
+
+export const lrcLineSchema = z.object({
+  timeMs: z.number(),
+  line: z.string(),
+});
 
 export const generateParodyRequestSchema = z.object({
   songId: z.string().uuid(),
@@ -15,6 +31,7 @@ export const generateParodyRequestSchema = z.object({
   tone: z.enum(toneOptions),
   audience: z.enum(audienceOptions),
   customIdea: z.string().max(200).optional(),
+  lrcLines: z.array(lrcLineSchema).optional(),
 });
 
 export type GenerateParodyRequest = z.infer<typeof generateParodyRequestSchema>;
@@ -29,11 +46,13 @@ export const transformationReportSchema = z.object({
 });
 
 export const generateParodyResponseSchema = z.object({
-  parodyLyrics: z.string(),
+  parodyLrcLines: z.array(lrcLineSchema),
   summaryNarration: z.string().max(300),
   transformationReport: transformationReportSchema,
   generatedAt: z.string().datetime(),
 });
 
-export type GenerateParodyResponse = z.infer<typeof generateParodyResponseSchema>;
+export type GenerateParodyResponse = z.infer<
+  typeof generateParodyResponseSchema
+>;
 export type TransformationReport = z.infer<typeof transformationReportSchema>;
