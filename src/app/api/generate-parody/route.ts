@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const data = parsed.data;
 
     // Use client-supplied LRC lines, or fetch from DB
-    let lrcLines: Array<{ timestamp: number; text: string }> | undefined =
+    let lrcLines: Array<{ timeMs: number; line: string }> | undefined =
       data.lrcLines;
     if (!lrcLines) {
       try {
@@ -27,12 +27,7 @@ export async function POST(request: Request) {
           .single();
 
         if (song?.lrc_data && Array.isArray(song.lrc_data)) {
-          lrcLines = (
-            song.lrc_data as Array<{ timeMs: number; line: string }>
-          ).map((l) => ({
-            timestamp: l.timeMs / 1000,
-            text: l.line,
-          }));
+          lrcLines = song.lrc_data as Array<{ timeMs: number; line: string }>;
         }
       } catch {
         console.warn(
@@ -66,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Create parody version with the generated LRC lines
-    const lyricsText = result.parodyLrcLines.map((l) => l.text).join("\n");
+    const lyricsText = result.parodyLrcLines.map((l) => l.line).join("\n");
     const { data: version, error: verErr } = await supabase
       .from("versions")
       .insert({

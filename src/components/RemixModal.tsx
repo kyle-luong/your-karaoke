@@ -260,11 +260,13 @@ export default function RemixModal({
                       className="flex gap-4 items-start group/line py-1 border-b border-border/5 last:border-0"
                     >
                       <span className="text-[11px] font-bold text-primary/40 mt-1 tabular-nums w-14 shrink-0 bg-primary/5 rounded px-2 py-0.5 text-center">
-                        {Math.floor(line.timestamp / 60)}:
-                        {(line.timestamp % 60).toFixed(1).padStart(4, "0")}
+                        {Math.floor(line.timeMs / 60000)}:
+                        {((line.timeMs % 60000) / 1000)
+                          .toFixed(1)
+                          .padStart(4, "0")}
                       </span>
                       <p className="text-foreground/80 group-hover/line:text-foreground transition-colors leading-relaxed">
-                        {line.text}
+                        {line.line}
                       </p>
                     </div>
                   ))}

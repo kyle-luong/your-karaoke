@@ -1,13 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
-import type { GenerateParodyRequest, GenerateParodyResponse } from "@/lib/schemas/parody";
+import type {
+  GenerateParodyRequest,
+  GenerateParodyResponse,
+} from "@/lib/schemas/parody";
 import { generateParodyResponseSchema } from "@/lib/schemas/parody";
 
 const MOCK_RESPONSE: GenerateParodyResponse = {
   parodyLrcLines: [
-    { timestamp: 0, text: "Happy burger to you" },
-    { timestamp: 4, text: "Happy burger to you" },
-    { timestamp: 8, text: "Happy burger dear ketchup" },
-    { timestamp: 12, text: "Happy burger to you" },
+    { timeMs: 0, line: "Happy burger to you" },
+    { timeMs: 4000, line: "Happy burger to you" },
+    { timeMs: 8000, line: "Happy burger dear ketchup" },
+    { timeMs: 12000, line: "Happy burger to you" },
   ],
   summaryNarration:
     "This parody transforms a classic birthday song into a hilarious ode to burgers, replacing heartfelt wishes with condiment-themed humor.",
@@ -15,17 +18,14 @@ const MOCK_RESPONSE: GenerateParodyResponse = {
     changesCount: 4,
     mainTheme: "food",
     toneUsed: "silly",
-    highlights: [
-      "birthday → burger",
-      "dear friend → dear ketchup",
-    ],
+    highlights: ["birthday → burger", "dear friend → dear ketchup"],
   },
   generatedAt: new Date().toISOString(),
 };
 
 export async function generateParody(
   req: GenerateParodyRequest,
-  lrcLines?: Array<{ timestamp: number; text: string }>
+  lrcLines?: Array<{ timeMs: number; line: string }>,
 ): Promise<GenerateParodyResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -38,7 +38,7 @@ export async function generateParody(
   const hasLrc = lrcLines && lrcLines.length > 0;
 
   const lrcBlock = hasLrc
-    ? `\nThe lyrics are provided as timed LRC lines (timestamp in seconds + text). You MUST rewrite EACH line individually, keeping the EXACT same number of lines and the EXACT same timestamps. Return the rewritten lines in the "parodyLrcLines" array.\n\nOriginal LRC lines:\n${lrcLines.map((l) => `[${l.timestamp}] ${l.text}`).join("\n")}`
+    ? `\nThe lyrics are provided as timed LRC lines (timeMs in milliseconds + line text). You MUST rewrite EACH line individually, keeping the EXACT same number of lines and the EXACT same timeMs values. Return the rewritten lines in the "parodyLrcLines" array.\n\nOriginal LRC lines:\n${lrcLines.map((l) => `[${l.timeMs}] ${l.line}`).join("\n")}`
     : `\nOriginal lyrics:\n${req.originalLyrics}`;
 
   const prompt = `You are a parody lyric generator. Given original lyrics, rewrite them as a parody.
@@ -60,7 +60,7 @@ Be creative and funny while strictly maintaining syllable counts.
 
 Respond ONLY with valid JSON matching this exact schema:
 {
-  "parodyLrcLines": [{"timestamp": number, "text": "rewritten line"}], // SAME count and timestamps as input
+  "parodyLrcLines": [{"timeMs": number, "line": "rewritten line"}], // SAME count and timeMs values as input
   "summaryNarration": "string (≤300 chars summary for voice narration)",
   "transformationReport": {
     "changesCount": number,

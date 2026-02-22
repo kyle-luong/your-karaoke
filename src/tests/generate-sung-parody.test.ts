@@ -29,10 +29,10 @@ describe("LRC Parser (parseLrcContent)", () => {
     const lrc = `[00:01.20]Hello world\n[00:05.10]Another line`;
     const result = parseLrcContent(lrc);
     expect(result).toHaveLength(2);
-    expect(result[0].timestamp).toBeCloseTo(1.2, 1);
-    expect(result[0].text).toBe("Hello world");
-    expect(result[1].timestamp).toBeCloseTo(5.1, 1);
-    expect(result[1].text).toBe("Another line");
+    expect(result[0].timeMs).toBeCloseTo(1200, -1);
+    expect(result[0].line).toBe("Hello world");
+    expect(result[1].timeMs).toBeCloseTo(5100, -1);
+    expect(result[1].line).toBe("Another line");
   });
 
   it("returns empty array for text with no valid LRC lines", () => {
@@ -48,7 +48,7 @@ describe("LRC Parser (parseLrcContent)", () => {
   it("skips empty lyric text lines", () => {
     const result = parseLrcContent("[00:01.00]   \n[00:02.00]Real line");
     expect(result).toHaveLength(1);
-    expect(result[0].text).toBe("Real line");
+    expect(result[0].line).toBe("Real line");
   });
 
   it("returns empty array for empty input", () => {
@@ -60,23 +60,23 @@ describe("LRC Parser (parseLrcContent)", () => {
     const lrc = "[05:30.00]Five minutes in";
     const result = parseLrcContent(lrc);
     expect(result).toHaveLength(1);
-    expect(result[0].timestamp).toBeCloseTo(330, 0);
+    expect(result[0].timeMs).toBeCloseTo(330000, -1);
   });
 
   it("handles timestamps at 00:00.01", () => {
     const lrc = "[00:00.01]Start\n[00:01.00]Next";
     const result = parseLrcContent(lrc);
     expect(result).toHaveLength(2);
-    expect(result[0].timestamp).toBeCloseTo(0.01, 2);
+    expect(result[0].timeMs).toBeCloseTo(10, -1);
   });
 
   it("parses the real i-wonder.txt format", () => {
     const sample = `[00:00.09] Find your dreams come true\n[00:04.09] And I wonder if you know\n[00:08.77] What it means, what it means`;
     const result = parseLrcContent(sample);
     expect(result).toHaveLength(3);
-    expect(result[0].text).toBe("Find your dreams come true");
-    expect(result[0].timestamp).toBeCloseTo(0.09, 2);
-    expect(result[2].timestamp).toBeCloseTo(8.77, 2);
+    expect(result[0].line).toBe("Find your dreams come true");
+    expect(result[0].timeMs).toBeCloseTo(90, -1);
+    expect(result[2].timeMs).toBeCloseTo(8770, -1);
   });
 });
 
@@ -143,28 +143,28 @@ describe("Edge Cases", () => {
     const lrc = "[00:01.200]Hello";
     const result = parseLrcContent(lrc);
     expect(result).toHaveLength(1);
-    expect(result[0].timestamp).toBeCloseTo(1.2, 1);
+    expect(result[0].timeMs).toBeCloseTo(1200, -1);
   });
 
   it("handles multi-minute timestamps", () => {
     const lrc = "[05:30.00]Five minutes in";
     const result = parseLrcContent(lrc);
     expect(result).toHaveLength(1);
-    expect(result[0].timestamp).toBeCloseTo(330, 0);
+    expect(result[0].timeMs).toBeCloseTo(330000, -1);
   });
 
   it("handles timestamps at 00:00.01", () => {
     const lrc = "[00:00.01]Start\n[00:01.00]Next";
     const result = parseLrcContent(lrc);
     expect(result).toHaveLength(2);
-    expect(result[0].timestamp).toBeCloseTo(0.01, 2);
+    expect(result[0].timeMs).toBeCloseTo(10, -1);
   });
 
   it("gracefully handles seconds >= 60 (parseFloat still works)", () => {
     // parseLrcContent uses parseFloat so 60.00 just becomes 60 seconds
     const result = parseLrcContent("[00:60.00]Edge");
-    // The regex still matches, it just results in timestamp = 60
+    // The regex still matches, it just results in timeMs = 60000
     expect(result).toHaveLength(1);
-    expect(result[0].timestamp).toBeCloseTo(60, 0);
+    expect(result[0].timeMs).toBeCloseTo(60000, -1);
   });
 });

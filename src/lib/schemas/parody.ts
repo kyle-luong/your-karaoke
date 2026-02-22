@@ -4,13 +4,24 @@ import { z } from "zod/v4";
 
 // --- Request schema ---
 
-export const themeOptions = ["food", "sports", "school", "office", "custom"] as const;
-export const toneOptions = ["silly", "sarcastic", "wholesome", "dramatic"] as const;
+export const themeOptions = [
+  "food",
+  "sports",
+  "school",
+  "office",
+  "custom",
+] as const;
+export const toneOptions = [
+  "silly",
+  "sarcastic",
+  "wholesome",
+  "dramatic",
+] as const;
 export const audienceOptions = ["kids", "teens", "adults"] as const;
 
 export const lrcLineSchema = z.object({
-  timestamp: z.number(),
-  text: z.string(),
+  timeMs: z.number(),
+  line: z.string(),
 });
 
 export const generateParodyRequestSchema = z.object({
@@ -41,5 +52,7 @@ export const generateParodyResponseSchema = z.object({
   generatedAt: z.string().datetime(),
 });
 
-export type GenerateParodyResponse = z.infer<typeof generateParodyResponseSchema>;
+export type GenerateParodyResponse = z.infer<
+  typeof generateParodyResponseSchema
+>;
 export type TransformationReport = z.infer<typeof transformationReportSchema>;

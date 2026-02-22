@@ -134,22 +134,24 @@ export async function POST(request: Request) {
     return errorJson("Version has no LRC timing data", 400);
   }
 
-  // Normalise to { timestamp, text } — DB may store as { timeMs, line } or { timestamp, text }
-  const parodyLrcLines: Array<{ timestamp: number; text: string }> = rawLrc.map(
+  // Normalise to { timeMs, line } — DB may store as { timeMs, line } or legacy { timestamp, text }
+  const parodyLrcLines: Array<{ timeMs: number; line: string }> = rawLrc.map(
     (entry: Record<string, unknown>) => {
+      if (typeof entry.timeMs === "number" && typeof entry.line === "string") {
+        return { timeMs: entry.timeMs, line: entry.line };
+      }
       if (
         typeof entry.timestamp === "number" &&
         typeof entry.text === "string"
       ) {
-        return { timestamp: entry.timestamp, text: entry.text };
-      }
-      if (typeof entry.timeMs === "number" && typeof entry.line === "string") {
-        return { timestamp: entry.timeMs / 1000, text: entry.line };
+        return { timeMs: Math.round(entry.timestamp * 1000), line: entry.text };
       }
       // Best-effort fallback
       return {
-        timestamp: Number(entry.timestamp ?? entry.timeMs ?? 0),
-        text: String(entry.text ?? entry.line ?? ""),
+        timeMs: Math.round(
+          Number(entry.timeMs ?? Number(entry.timestamp ?? 0) * 1000),
+        ),
+        line: String(entry.line ?? entry.text ?? ""),
       };
     },
   );
@@ -205,7 +207,11 @@ export async function POST(request: Request) {
     mixedMp3 = result.mixedMp3;
     vocalsMp3 = result.vocalsMp3;
     durationMs = result.durationMs;
-    console.log("[generate-audio] Initial mix complete — duration:", durationMs, "ms");
+    console.log(
+      "[generate-audio] Initial mix complete — duration:",
+      durationMs,
+      "ms",
+    );
   } catch (err) {
     console.error("[generate-audio] Audio mixing error:", err);
     return errorJson("Audio processing failed", 500);
@@ -214,7 +220,9 @@ export async function POST(request: Request) {
   // --- 8. Voice conversion via Replicate RVC (single call on combined vocals) ---
   try {
     const contentType = version.type === "parody" ? "parody" : "educational";
-    console.log("[generate-audio] Running RVC voice conversion on combined vocals...");
+    console.log(
+      "[generate-audio] Running RVC voice conversion on combined vocals...",
+    );
     const convertedVocals = await convertVoice(vocalsMp3, {
       genre: song.genre ?? "",
       contentType,
@@ -222,17 +230,24 @@ export async function POST(request: Request) {
 
     // Re-mix converted vocals with instrumental
     if (convertedVocals !== vocalsMp3) {
-      console.log("[generate-audio] Re-mixing converted vocals with instrumental...");
-      const reMix = await mixAudio(instrumentalBuffer, [{
-        entry: { timestamp: 0, text: "" },
-        audioBuffer: convertedVocals,
-      }]);
+      console.log(
+        "[generate-audio] Re-mixing converted vocals with instrumental...",
+      );
+      const reMix = await mixAudio(instrumentalBuffer, [
+        {
+          entry: { timeMs: 0, line: "" },
+          audioBuffer: convertedVocals,
+        },
+      ]);
       mixedMp3 = reMix.mixedMp3;
       durationMs = reMix.durationMs;
       console.log("[generate-audio] Voice conversion + re-mix complete");
     }
   } catch (err) {
-    console.warn("[generate-audio] Voice conversion failed (using TTS vocals):", err);
+    console.warn(
+      "[generate-audio] Voice conversion failed (using TTS vocals):",
+      err,
+    );
   }
 
   // --- 9. Save MP3 ---

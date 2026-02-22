@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { themeOptions, toneOptions, audienceOptions } from "@/lib/schemas/parody";
+import {
+  themeOptions,
+  toneOptions,
+  audienceOptions,
+} from "@/lib/schemas/parody";
 import type { GenerateParodyResponse } from "@/lib/schemas/parody";
 import Player from "@/components/player";
 
@@ -24,17 +28,27 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GenerateParodyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [song, setSong] = useState<{ title: string; artist: string; lyrics_raw: string } | null>(null);
-  const [sungResult, setSungResult] = useState<{ mp3Url: string; parodyLrcLines: Array<{ timestamp: number; text: string }> } | null>(null);
+  const [song, setSong] = useState<{
+    title: string;
+    artist: string;
+    lyrics_raw: string;
+  } | null>(null);
+  const [sungResult, setSungResult] = useState<{
+    mp3Url: string;
+    parodyLrcLines: Array<{ timeMs: number; line: string }>;
+  } | null>(null);
   const [sungLoading, setSungLoading] = useState(false);
   const [sungError, setSungError] = useState<string | null>(null);
 
   // Fetch song details
   useEffect(() => {
     if (!songId) return;
-    fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/songs?id=eq.${songId}&select=*`, {
-      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
-    })
+    fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/songs?id=eq.${songId}&select=*`,
+      {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+      },
+    )
       .then((r) => r.json())
       .then((data) => data[0] && setSong(data[0]));
   }, [songId]);
@@ -168,30 +182,49 @@ export default function ProjectPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
-              <CardHeader><CardTitle>Original</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Original</CardTitle>
+              </CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap text-sm">{song?.lyrics_raw}</pre>
+                <pre className="whitespace-pre-wrap text-sm">
+                  {song?.lyrics_raw}
+                </pre>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle>Parody</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Parody</CardTitle>
+              </CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap text-sm">{result.parodyLrcLines.map((l) => l.text).join("\n")}</pre>
+                <pre className="whitespace-pre-wrap text-sm">
+                  {result.parodyLrcLines.map((l) => l.line).join("\n")}
+                </pre>
               </CardContent>
             </Card>
           </div>
 
           <Card>
-            <CardHeader><CardTitle>Transformation Report</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Transformation Report</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
-              <p><strong>Changes:</strong> {result.transformationReport.changesCount}</p>
-              <p><strong>Theme:</strong> {result.transformationReport.mainTheme}</p>
-              <p><strong>Tone:</strong> {result.transformationReport.toneUsed}</p>
+              <p>
+                <strong>Changes:</strong>{" "}
+                {result.transformationReport.changesCount}
+              </p>
+              <p>
+                <strong>Theme:</strong> {result.transformationReport.mainTheme}
+              </p>
+              <p>
+                <strong>Tone:</strong> {result.transformationReport.toneUsed}
+              </p>
               <div>
                 <strong>Highlights:</strong>
                 <ul className="list-disc list-inside">
                   {result.transformationReport.highlights.map((h, i) => (
-                    <li key={i} className="text-sm">{h}</li>
+                    <li key={i} className="text-sm">
+                      {h}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -199,7 +232,9 @@ export default function ProjectPage() {
           </Card>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setResult(null)}>Regenerate</Button>
+            <Button variant="outline" onClick={() => setResult(null)}>
+              Regenerate
+            </Button>
             <Button onClick={handleSingIt} disabled={sungLoading}>
               {sungLoading ? "Generating Vocals..." : "Sing It!"}
             </Button>

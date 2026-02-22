@@ -14,10 +14,10 @@ const PREMADE_FALLBACK_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
 /** A single timed lyric line — mirrors LyricLine from utils/lrc-parser. */
 export interface LyricEntry {
-  /** Timestamp in seconds. */
-  timestamp: number;
+  /** Time in milliseconds from track start. */
+  timeMs: number;
   /** Lyric text for this line. */
-  text: string;
+  line: string;
 }
 
 export interface VocalSegment {
@@ -55,11 +55,16 @@ async function synthesizeLine(
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => "");
-    console.error(`[elevenlabs] API error ${response.status} (voice: ${voiceId}):`, errorBody);
+    console.error(
+      `[elevenlabs] API error ${response.status} (voice: ${voiceId}):`,
+      errorBody,
+    );
     // 402 with "paid_plan_required" means the voice is a library voice not usable on free tier
     // Retry with the premade fallback voice
     if (response.status === 402 && voiceId !== PREMADE_FALLBACK_VOICE_ID) {
-      console.warn(`[elevenlabs] Voice ${voiceId} requires paid plan — falling back to premade voice`);
+      console.warn(
+        `[elevenlabs] Voice ${voiceId} requires paid plan — falling back to premade voice`,
+      );
       return synthesizeLine(text, PREMADE_FALLBACK_VOICE_ID, apiKey);
     }
     if (response.status === 402) {
@@ -99,7 +104,7 @@ export async function generateVocalSegments(
   const segments: VocalSegment[] = [];
 
   for (const entry of entries) {
-    const audioBuffer = await synthesizeLine(entry.text, voiceId, apiKey);
+    const audioBuffer = await synthesizeLine(entry.line, voiceId, apiKey);
     segments.push({ entry, audioBuffer });
   }
 

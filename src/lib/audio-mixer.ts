@@ -129,21 +129,22 @@ export async function mixAudio(
       const filters: string[] = [];
 
       for (let i = 0; i < segments.length; i++) {
-        const delayMs = Math.round(segments[i].entry.timestamp * 1000);
+        const delayMs = Math.round(segments[i].entry.timeMs);
         filters.push(
-          `[${i + 1}:a]adelay=${delayMs}|${delayMs},volume=3.0[v${i}]`,
+          `[${i + 1}:a]adelay=${delayMs}|${delayMs},volume=2.0[v${i}]`,
         );
       }
 
       // Mix all vocals together → [vocals]
+      // normalize=0 prevents amix from dividing by N inputs (which makes vocals inaudible)
       const vocalInputs = segments.map((_, i) => `[v${i}]`).join("");
       filters.push(
-        `${vocalInputs}amix=inputs=${segments.length}:duration=longest:dropout_transition=0[vocals]`,
+        `${vocalInputs}amix=inputs=${segments.length}:duration=longest:dropout_transition=0:normalize=0[vocals]`,
       );
 
       // Overlay vocals onto instrumental → [out]
       filters.push(
-        `[0:a]volume=0.15[inst];[inst][vocals]amix=inputs=2:duration=first:dropout_transition=0[out]`,
+        `[0:a]volume=0.4[inst];[inst][vocals]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[out]`,
       );
 
       const filterComplex = filters.join(";");
@@ -171,14 +172,14 @@ export async function mixAudio(
 
       const vocalsFilters: string[] = [];
       for (let i = 0; i < segments.length; i++) {
-        const delayMs = Math.round(segments[i].entry.timestamp * 1000);
+        const delayMs = Math.round(segments[i].entry.timeMs);
         vocalsFilters.push(
-          `[${i}:a]adelay=${delayMs}|${delayMs},volume=3.0[v${i}]`,
+          `[${i}:a]adelay=${delayMs}|${delayMs},volume=2.0[v${i}]`,
         );
       }
       const vocalsVocalInputs = segments.map((_, i) => `[v${i}]`).join("");
       vocalsFilters.push(
-        `${vocalsVocalInputs}amix=inputs=${segments.length}:duration=longest:dropout_transition=0[vocalsout]`,
+        `${vocalsVocalInputs}amix=inputs=${segments.length}:duration=longest:dropout_transition=0:normalize=0[vocalsout]`,
       );
 
       vocalsInputs.push(
