@@ -117,16 +117,15 @@ export default async function LibraryPage() {
             className="px-3 py-1 text-sm border-primary/50 text-primary"
           >
             <Sparkles className="mr-2 size-3 inline" />
-            AI Lyric Sanitizer
+            AI Lyric Remixer
           </Badge>
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic">
-            SCRUB THE <span className="text-primary">DIRT.</span>
+            REWRITE. <span className="text-primary">RECORD.</span>
             <br />
-            KEEP THE <span className="text-primary">BEAT.</span>
+            <span className="text-primary">SHARE.</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-lg">
-            Lyric Lab automatically cleans explicit tracks and helps you flip
-            them into hilarious, kid-safe parodies.
+            LyricLab reimagines your favorite songs to sing with friends.
           </p>
           <HomeActions isAuthenticated={!!user} />
         </div>
