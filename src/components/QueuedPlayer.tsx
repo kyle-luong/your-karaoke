@@ -83,8 +83,52 @@ export default function QueuedPlayer({
             compact={compact} 
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No songs in queue
+          <div className="w-full h-full bg-gradient-to-br from-purple-900 to-purple-950 border-2 border-white/15 rounded-2xl backdrop-blur-md flex flex-col overflow-hidden">
+            {/* Empty lyrics area */}
+            <div className="flex-1 flex items-center justify-center text-white/40 font-medium">
+              No song playing
+            </div>
+            
+            {/* Controls */}
+            <div className="p-4 border-t border-white/15 bg-black/20 flex flex-col gap-2.5">
+              {/* Progress bar (empty state) */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/60 font-medium min-w-fit">0:00</span>
+                <div className="flex-1 h-1 bg-white/15 rounded-full" />
+                <span className="text-xs text-white/60 font-medium min-w-fit">0:00</span>
+              </div>
+              
+              {/* Buttons */}
+              <div className="flex justify-center gap-3 items-center">
+                <button 
+                  disabled 
+                  className="w-9 h-9 rounded-lg border border-white/30 bg-gradient-to-br from-pink-500/20 to-pink-600/10 text-white/50 text-sm cursor-not-allowed flex items-center justify-center font-semibold opacity-40 transition-all"
+                  title="Previous song"
+                >
+                  ⏮
+                </button>
+                <button 
+                  disabled 
+                  className="w-11 h-11 rounded-full border-2 border-white/50 bg-gradient-to-br from-pink-500/30 to-pink-600/20 text-white/70 text-base cursor-not-allowed flex items-center justify-center font-semibold opacity-50 transition-all"
+                >
+                  ▶
+                </button>
+                <button 
+                  disabled 
+                  className="w-9 h-9 rounded-lg border border-white/30 bg-gradient-to-br from-pink-500/20 to-pink-600/10 text-white/50 text-sm cursor-not-allowed flex items-center justify-center font-semibold opacity-40 transition-all"
+                  title="Next song"
+                >
+                  ⏭
+                </button>
+                <button 
+                  disabled 
+                  className="w-9 h-9 rounded-lg border border-white/30 bg-gradient-to-br from-pink-500/20 to-pink-600/10 text-white/50 text-sm cursor-not-allowed flex items-center justify-center font-semibold opacity-40 transition-all"
+                  title="Fullscreen"
+                >
+                  ⛶
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -113,7 +157,7 @@ export default function QueuedPlayer({
               <div className="flex items-start gap-3">
                 {/* Queue Number */}
                 <div className="text-xs font-semibold text-zinc-500 mt-0.5 w-5 flex-shrink-0">
-                  {index === currentIndex ? "▶" : index + 1}
+                  {index === currentIndex ? "" : index + 1}
                 </div>
 
                 {/* Song Info */}
