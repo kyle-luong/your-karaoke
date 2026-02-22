@@ -54,6 +54,9 @@ async function synthesizeLine(
   });
 
   if (!response.ok) {
+    if (response.status === 402) {
+      throw new Error("ElevenLabs character quota exceeded. Please check your billing or use a different API key.");
+    }
     throw new Error(`ElevenLabs API error: ${response.status}`);
   }
 
