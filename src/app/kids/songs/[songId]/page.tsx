@@ -14,10 +14,15 @@ import type { Song, Version, Report } from "@/lib/types/database";
 
 interface PageProps {
   params: Promise<{ songId: string }>;
+  searchParams?: Promise<{ version?: string }>;
 }
 
-export default async function KidsSongDetailPage({ params }: PageProps) {
+export default async function KidsSongDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { songId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const supabase = await createServerSupabase();
 
   // Fetch the song — must be child_safe
@@ -80,7 +85,7 @@ export default async function KidsSongDetailPage({ params }: PageProps) {
             <ArrowLeft className="size-3" />
             Back to Discover
           </Link>
-          <SongHero song={typedSong} />
+          <SongHero song={typedSong} originalLyrics={typedSong.lyrics_raw} />
         </div>
       </div>
 
@@ -112,6 +117,7 @@ export default async function KidsSongDetailPage({ params }: PageProps) {
               songTitle={typedSong.title}
               songId={typedSong.id}
               versions={versionsWithReports}
+              initialVersionId={resolvedSearchParams?.version}
             />
           </section>
         </div>
