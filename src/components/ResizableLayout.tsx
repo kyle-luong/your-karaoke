@@ -35,6 +35,14 @@ export default function ResizableLayout({ songs }: ResizableLayoutProps) {
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // On mount, expand the sidebar to as wide as allowed (up to 600px or half the container)
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const containerWidth = containerRef.current.getBoundingClientRect().width;
+    const initial = Math.min(600, Math.floor(containerWidth * 0.5));
+    setSidebarWidth(initial);
+  }, []);
+
   // Handle mouse down on divider
   const handleMouseDown = () => {
     setIsResizing(true);
