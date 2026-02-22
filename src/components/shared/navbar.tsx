@@ -33,6 +33,15 @@ export function Navbar({
         </Link>
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              const port = window.location.port ? `:${window.location.port}` : '';
+              window.location.href = `${window.location.protocol}//kids.localhost${port}`;
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white text-xs font-bold uppercase tracking-wide hover:opacity-90 transition-opacity shadow-sm"
+          >
+            🧒 Kids Mode
+          </button>
           {userEmail ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

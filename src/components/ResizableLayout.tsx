@@ -15,6 +15,7 @@ import {
   Play,
   Users,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import QueuedPlayer from '@/components/QueuedPlayer';
 import type { Song } from '@/lib/types/database';
@@ -192,8 +193,8 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
                 key={g.name}
                 onClick={() => setActiveGenre(g.name)}
                 className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${activeGenre === g.name
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-accent text-muted-foreground'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted hover:bg-accent text-muted-foreground'
                   }`}
               >
                 <g.icon className="size-3.5" />
@@ -266,6 +267,19 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
                           <Badge className="absolute top-1.5 left-1.5 bg-primary text-primary-foreground text-[10px] border-none">
                             ♪ Playing
                           </Badge>
+                        )}
+
+                        {/* Content rating */}
+                        {!isPlaying && (
+                          <div className="absolute top-1.5 left-1.5">
+                            {song.is_explicit ? (
+                              <Badge className="bg-red-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5">E</Badge>
+                            ) : (
+                              <Badge className="bg-emerald-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5 flex items-center gap-0.5">
+                                <ShieldCheck className="size-2.5" /> Safe
+                              </Badge>
+                            )}
+                          </div>
                         )}
 
                         {/* Hover overlay with play button */}

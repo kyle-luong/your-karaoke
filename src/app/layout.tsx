@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { Navbar } from "@/components/shared/navbar";
 import { createServerSupabase } from "@/lib/supabase/server";
 import "./globals.css";
@@ -20,13 +21,20 @@ export default async function RootLayout({
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Detect kids subdomain — hide main navbar on kids site
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "";
+  const isKids = host.split(":")[0].startsWith("kids.");
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Navbar 
-          userEmail={user?.email} 
-          userImage={user?.user_metadata?.avatar_url} 
-        />
+        {!isKids && (
+          <Navbar
+            userEmail={user?.email}
+            userImage={user?.user_metadata?.avatar_url}
+          />
+        )}
         {children}
       </body>
     </html>

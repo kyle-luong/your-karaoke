@@ -13,6 +13,8 @@ create table songs (
   lyrics_raw text not null,
   lrc_data jsonb not null default '[]',
   thumbnail_url text,
+  is_explicit boolean not null default true,
+  child_safe boolean not null default false,
   created_at timestamptz not null default now()
 );
 

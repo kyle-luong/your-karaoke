@@ -12,6 +12,8 @@ export type Song = {
   lyrics_raw: string;
   lrc_data: LrcData;
   thumbnail_url: string | null;
+  is_explicit: boolean;
+  child_safe: boolean;
   created_at: string;
 };
 
