@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import parseLrcContent from "@/lib/utils/lrc-parser";
 
 interface LyricLine {
@@ -10,14 +10,15 @@ interface LyricLine {
 
 // 5 background color options
 const BG_COLORS = [
-  '#6B1B47', // Dark purple/magenta
-  '#2D1B3D', // Deep purple
-  '#1F3A5F', // Deep blue
-  '#1B3A3A', // Deep teal
-  '#3A1F1F', // Deep burgundy
+  "#6B1B47", // Dark purple/magenta
+  "#2D1B3D", // Deep purple
+  "#1F3A5F", // Deep blue
+  "#1B3A3A", // Deep teal
+  "#3A1F1F", // Deep burgundy
 ];
 
-const getRandomColor = () => BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
+const getRandomColor = () =>
+  BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -37,9 +38,11 @@ export default function Player() {
     let cancelled = false;
     const init = async () => {
       try {
-        const lrcContent = await fetch('/demo/lrcs/i-wonder.txt').then(r => r.text());
+        const lrcContent = await fetch("/demo/lrcs/i-wonder.txt").then((r) =>
+          r.text(),
+        );
         if (cancelled) return;
-        if (audioRef.current) audioRef.current.src = '/demo/songs/i-wonder.mp3';
+        if (audioRef.current) audioRef.current.src = "/demo/songs/i-wonder.mp3";
         setLyrics(parseLrcContent(lrcContent));
         setBgColor(getRandomColor());
       } finally {
@@ -47,7 +50,9 @@ export default function Player() {
       }
     };
     init();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -57,15 +62,15 @@ export default function Player() {
     const onMeta = () => setDuration(audio.duration);
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
-    audio.addEventListener('timeupdate', onTime);
-    audio.addEventListener('loadedmetadata', onMeta);
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
     return () => {
-      audio.removeEventListener('timeupdate', onTime);
-      audio.removeEventListener('loadedmetadata', onMeta);
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
     };
   }, []);
 
@@ -73,14 +78,21 @@ export default function Player() {
   useEffect(() => {
     let idx = -1;
     for (let i = lyrics.length - 1; i >= 0; i--) {
-      if (lyrics[i].timestamp <= currentTime) { idx = i; break; }
+      if (lyrics[i].timestamp <= currentTime) {
+        idx = i;
+        break;
+      }
     }
     if (idx !== activeIndex) setActiveIndex(idx);
   }, [currentTime, lyrics]);
 
   // Scroll active line into view
   useEffect(() => {
-    if (activeIndex >= 0 && lineRefs.current[activeIndex] && lyricsRef.current) {
+    if (
+      activeIndex >= 0 &&
+      lineRefs.current[activeIndex] &&
+      lyricsRef.current
+    ) {
       const container = lyricsRef.current;
       const line = lineRefs.current[activeIndex];
       const lineTop = line.offsetTop;
@@ -88,7 +100,7 @@ export default function Player() {
       const containerHeight = container.offsetHeight;
       container.scrollTo({
         top: lineTop - containerHeight / 3 + lineHeight / 2,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   }, [activeIndex]);
@@ -139,12 +151,13 @@ export default function Player() {
   }, []);
 
   const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (audioRef.current) audioRef.current.currentTime = parseFloat(e.target.value);
+    if (audioRef.current)
+      audioRef.current.currentTime = parseFloat(e.target.value);
   };
 
   const fmt = (t: number) => {
-    if (!isFinite(t)) return '0:00';
-    return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+    if (!isFinite(t)) return "0:00";
+    return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
   };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
@@ -478,10 +491,13 @@ export default function Player() {
               {lyrics.map((line, i) => (
                 <div
                   key={i}
-                  ref={el => { lineRefs.current[i] = el; }}
-                  className={`lyric-line ${i === activeIndex ? 'active' : Math.abs(i - activeIndex) <= 2 ? 'near' : ''}`}
+                  ref={(el) => {
+                    lineRefs.current[i] = el;
+                  }}
+                  className={`lyric-line ${i === activeIndex ? "active" : Math.abs(i - activeIndex) <= 2 ? "near" : ""}`}
                   onClick={() => {
-                    if (audioRef.current) audioRef.current.currentTime = line.timestamp;
+                    if (audioRef.current)
+                      audioRef.current.currentTime = line.timestamp;
                   }}
                 >
                   {line.text}
@@ -495,14 +511,21 @@ export default function Player() {
               <span className="time">{fmt(currentTime)}</span>
               <div className="track">
                 <div className="track-fill" style={{ width: `${progress}%` }} />
-                <input type="range" min={0} max={duration || 0} value={currentTime} onChange={seek} step={0.1} />
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 0}
+                  value={currentTime}
+                  onChange={seek}
+                  step={0.1}
+                />
               </div>
               <span className="time">{fmt(duration)}</span>
             </div>
             <div className="btn-row">
               <button className="control-btn" onClick={() => skip(-5)} title="Rewind 5s">-5s</button>
               <button className="play-btn" onClick={togglePlay}>
-                {isPlaying ? '⏸' : '▶'}
+                {isPlaying ? "⏸" : "▶"}
               </button>
               <button className="control-btn" onClick={() => skip(5)} title="Fast forward 5s">+5s</button>
               <button className="control-btn" onClick={toggleFullscreen} title="Fullscreen">⛶</button>
