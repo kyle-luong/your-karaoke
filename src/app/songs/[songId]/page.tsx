@@ -2,6 +2,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import SongHero from "@/components/SongHero";
 import SongVersions from "@/components/SongVersions";
 import type { Song, Version, Report } from "@/lib/types/database";
@@ -105,11 +106,16 @@ export default async function SongDetailPage({ params }: PageProps) {
                         </div>
                     </section>
 
-                    {/* Right: Modified Versions */}
+                    {/* Remixes Section */}
                     <section className="space-y-5">
-                        <h2 className="text-lg font-bold uppercase tracking-tight">
-                            Modified Versions
-                        </h2>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-bold uppercase tracking-tight">
+                                Remixes
+                            </h2>
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">
+                                {versionsWithReports.length}
+                            </Badge>
+                        </div>
                         <SongVersions
                             songTitle={typedSong.title}
                             songId={typedSong.id}

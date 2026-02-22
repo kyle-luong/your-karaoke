@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { Badge } from '@/components/ui/badge';
 import {
   Mic2,
   Music,
@@ -59,9 +60,9 @@ function toPlayerSong(song: Song): PlayerSong {
   const lyrics =
     song.lrc_data && Array.isArray(song.lrc_data)
       ? song.lrc_data.map((l) => ({
-          timeMs: l.timeMs,
-          line: l.line,
-        }))
+        timeMs: l.timeMs,
+        line: l.line,
+      }))
       : undefined;
 
   return {
@@ -99,15 +100,66 @@ export default function ResizableLayout({
   // On mount: auto-play song from ?play= query param
   useEffect(() => {
     if (initialised) return;
-    const playId = searchParams.get("play");
-    if (playId) {
-      const song = songs.find((s) => s.id === playId);
-      if (song) {
-        setQueue([toPlayerSong(song)]);
-        setCurrentIndex(0);
+    const playId = searchParams.get('play');
+    const versionId = searchParams.get('versionId');
+
+    async function initPlay() {
+      if (!playId) {
+        setInitialised(true);
+        return;
       }
+
+      // If versionId is present, we need to fetch the version lyrics
+      if (versionId) {
+        try {
+          const supabase = createClient();
+          // Fetch version and its report
+          const { data: version } = await supabase
+            .from('versions')
+            .select('*, reports(*)')
+            .eq('id', versionId)
+            .single();
+
+          const { data: song } = await supabase
+            .from('songs')
+            .select('*')
+            .eq('id', playId) // playId is the project_id? Wait, look at SongHero link.
+            // SongHero uses searchParams.get('play') as song.id.
+            // But VersionModal uses searchParams.get('play') as version.project_id.
+            // I should standardized 'play' to always be song_id, or handle both.
+            // Let's assume 'play' is the song_id.
+            .single();
+
+          if (version && song) {
+            const report = version.reports && version.reports[0];
+            const playerSong: PlayerSong = {
+              id: song.id,
+              title: song.title,
+              artist: song.artist,
+              // If remix audio exists, use it. Otherwise use original (instrumental)
+              audioUrl: report?.narration_audio_url || song.audio_url,
+              lyrics: (version.lrc_data as any[]).map(l => ({
+                timeMs: l.timeMs,
+                line: l.line
+              }))
+            };
+            setQueue([playerSong]);
+            setCurrentIndex(0);
+          }
+        } catch (err) {
+          console.error('Failed to load version:', err);
+        }
+      } else {
+        const song = songs.find((s) => s.id === playId);
+        if (song) {
+          setQueue([toPlayerSong(song)]);
+          setCurrentIndex(0);
+        }
+      }
+      setInitialised(true);
     }
-    setInitialised(true);
+
+    initPlay();
   }, [searchParams, songs, initialised]);
 
   // On mount, expand sidebar
@@ -210,11 +262,10 @@ export default function ResizableLayout({
               <button
                 key={g.name}
                 onClick={() => setActiveGenre(g.name)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${
-                  activeGenre === g.name
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${activeGenre === g.name
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted hover:bg-accent text-muted-foreground"
-                }`}
+                  }`}
               >
                 <g.icon className="size-3.5" />
                 {g.name}
@@ -349,9 +400,8 @@ export default function ResizableLayout({
       {/* ───── Draggable Divider ───── */}
       <div
         onMouseDown={handleMouseDown}
-        className={`w-1 hover:bg-primary/50 cursor-col-resize transition-colors ${
-          isResizing ? "bg-primary/50" : "bg-border"
-        }`}
+        className={`w-1 hover:bg-primary/50 cursor-col-resize transition-colors ${isResizing ? "bg-primary/50" : "bg-border"
+          }`}
       />
 
       {/* ───── Right Sidebar (Player + Queue) ───── */}

@@ -35,9 +35,9 @@ export default function VersionCard({ version, report, onClick }: VersionCardPro
                     </span>
                     <Badge
                         variant="outline"
-                        className="text-[10px] ml-auto"
+                        className="text-[10px] ml-auto uppercase tracking-tighter font-bold"
                     >
-                        {version.type}
+                        Remix
                     </Badge>
                     {tone && (
                         <Badge className="text-[10px] bg-primary/10 text-primary border-none">
