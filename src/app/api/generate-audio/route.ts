@@ -17,6 +17,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateVocalSegments } from "@/lib/elevenlabs-singing";
+import { convertVoice } from "@/lib/services/voice-conversion";
 import { mixAudio } from "@/lib/audio-mixer";
 import { saveGeneratedFile } from "@/lib/utils/storage";
 
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
   // --- 3. Fetch song ---
   const { data: song, error: songErr } = await supabase
     .from("songs")
-    .select("id, title")
+    .select("id, title, genre")
     .eq("id", project.song_id)
     .single();
 
@@ -194,27 +195,47 @@ export async function POST(request: Request) {
     return errorJson("Voice generation failed", 502);
   }
 
-  // --- 7. Mix vocals onto instrumental ---
+  // --- 7. Mix vocals (first pass — to get combined vocals track) ---
   let mixedMp3: Buffer;
+  let vocalsMp3: Buffer;
   let durationMs: number;
   try {
-    console.log("[generate-audio] Mixing audio...");
+    console.log("[generate-audio] Mixing vocals...");
     const result = await mixAudio(instrumentalBuffer, segments);
     mixedMp3 = result.mixedMp3;
+    vocalsMp3 = result.vocalsMp3;
     durationMs = result.durationMs;
-    console.log(
-      "[generate-audio] Mix complete — duration:",
-      durationMs,
-      "ms, size:",
-      mixedMp3.length,
-      "bytes",
-    );
+    console.log("[generate-audio] Initial mix complete — duration:", durationMs, "ms");
   } catch (err) {
     console.error("[generate-audio] Audio mixing error:", err);
     return errorJson("Audio processing failed", 500);
   }
 
-  // --- 8. Save MP3 ---
+  // --- 8. Voice conversion via Replicate RVC (single call on combined vocals) ---
+  try {
+    const contentType = version.type === "parody" ? "parody" : "educational";
+    console.log("[generate-audio] Running RVC voice conversion on combined vocals...");
+    const convertedVocals = await convertVoice(vocalsMp3, {
+      genre: song.genre ?? "",
+      contentType,
+    });
+
+    // Re-mix converted vocals with instrumental
+    if (convertedVocals !== vocalsMp3) {
+      console.log("[generate-audio] Re-mixing converted vocals with instrumental...");
+      const reMix = await mixAudio(instrumentalBuffer, [{
+        entry: { timestamp: 0, text: "" },
+        audioBuffer: convertedVocals,
+      }]);
+      mixedMp3 = reMix.mixedMp3;
+      durationMs = reMix.durationMs;
+      console.log("[generate-audio] Voice conversion + re-mix complete");
+    }
+  } catch (err) {
+    console.warn("[generate-audio] Voice conversion failed (using TTS vocals):", err);
+  }
+
+  // --- 9. Save MP3 ---
   let mp3Url: string;
   try {
     mp3Url = await saveGeneratedFile(
@@ -228,7 +249,7 @@ export async function POST(request: Request) {
     return errorJson("Failed to save generated audio", 500);
   }
 
-  // --- 9. Update the report's narration_audio_url so the UI can play it later ---
+  // --- 10. Update the report's narration_audio_url so the UI can play it later ---
   try {
     const { error: updateErr } = await supabase
       .from("reports")

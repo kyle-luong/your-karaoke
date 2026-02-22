@@ -127,17 +127,17 @@ export default function VersionModal({
                             <button
                                 onClick={handleGenerateMP3}
                                 disabled={isGenerating}
-                                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-muted hover:bg-muted-foreground/10 text-foreground font-bold text-xs uppercase tracking-wide transition-all disabled:opacity-50"
+                                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-muted hover:bg-muted-foreground/10 text-foreground font-bold text-xs uppercase tracking-wide transition-all disabled:opacity-50 min-w-0"
                             >
                                 {isGenerating ? (
                                     <>
-                                        <div className="size-3 animate-spin border-2 border-primary border-t-transparent rounded-full" />
-                                        Generating...
+                                        <div className="size-3 shrink-0 animate-spin border-2 border-primary border-t-transparent rounded-full" />
+                                        <span>Generating...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Sparkles className="size-4" />
-                                        Generate MP3
+                                        <Sparkles className="size-4 shrink-0" />
+                                        <span>Generate MP3</span>
                                     </>
                                 )}
                             </button>
