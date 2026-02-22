@@ -36,9 +36,10 @@ interface PlayerProps {
   onPreviousSong?: () => void;
   lyrics?: Array<{ timeMs: number; line: string }>;
   compact?: boolean;
+  audioUrl?: string; // Standardize/compatibility
 }
 
-export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, lyrics: propLyrics, compact = true }: PlayerProps = {}) {
+export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, lyrics: propLyrics, compact = true, audioUrl }: PlayerProps = {}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -55,7 +56,6 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
 
   useEffect(() => {
     let cancelled = false;
-
     setIsKaraokeMode(false);
 
     if (propLyrics && propLyrics.length > 0) {
@@ -87,8 +87,8 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
             audioRef.current.src = song.audioUrl;
           }
           setLyrics(parseLrcContent(lrcContent));
-        } else if (song?.audioUrl && audioRef.current) {
-          audioRef.current.src = song.audioUrl;
+        } else if ((song?.audioUrl || audioUrl) && audioRef.current) {
+          audioRef.current.src = song?.audioUrl || audioUrl || "";
         }
         setBgColor(getRandomColor());
       } finally {
@@ -99,12 +99,12 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     return () => {
       cancelled = true;
     };
-  }, [song, propLyrics]);
+  }, [song, propLyrics, audioUrl]);
 
   // Autoplay next song when it changes
   useEffect(() => {
     if (song && audioRef.current && !isLoading) {
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => { });
     }
   }, [song, isLoading]);
 
@@ -167,7 +167,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      audio.play().catch(() => {});
+      audio.play().catch(() => { });
     } else {
       audio.pause();
     }
@@ -212,7 +212,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       onLoaded();
     } else {
       // ensure the browser starts loading metadata
-      try { audio.load(); } catch (e) {}
+      try { audio.load(); } catch (e) { }
     }
   };
 
@@ -598,13 +598,12 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
             <div
               key={i}
               ref={(el) => { lineRefs.current[i] = el; }}
-              className={`player-lyric-line ${
-                i === activeIndex
+              className={`player-lyric-line ${i === activeIndex
                   ? "active"
                   : Math.abs(i - activeIndex) <= 2
-                  ? "near"
-                  : ""
-              }`}
+                    ? "near"
+                    : ""
+                }`}
               onClick={() => {
                 if (audioRef.current)
                   audioRef.current.currentTime = line.timeMs / 1000;
@@ -659,7 +658,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
   return (
     <>
       <style>{cardStyles}</style>
-      <audio ref={audioRef} crossOrigin="anonymous" autoPlay/>
+      <audio ref={audioRef} crossOrigin="anonymous" autoPlay />
 
       {compact ? (
         cardContent

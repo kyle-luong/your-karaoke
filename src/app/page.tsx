@@ -1,5 +1,6 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HomeActions } from "@/components/shared/home-actions";
 import {
@@ -8,6 +9,7 @@ import {
   Guitar,
   Zap,
   Heart,
+  Disc,
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
