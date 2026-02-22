@@ -75,32 +75,28 @@ function toPlayerSong(song: Song): PlayerSong {
   };
 }
 
-function getInstrumentalUrl(audioUrl: string | null | undefined) {
-  if (!audioUrl) return null;
-  if (!audioUrl.includes("/demo/songs/")) return null;
-  const base = audioUrl.split("/").pop() ?? "";
-  if (!base.endsWith(".mp3")) return null;
-  const stem = base.replace(".mp3", "").replace("-instrumental", "");
-  return `/demo/instrumentals/${stem}-instrumental.mp3`;
+function getInstrumentalUrl(songTitle: string) {
+  const slug = songTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+  return `/demo/instrumentals/${slug}-instrumental.mp3`;
 }
 
 function toRemixPlayerSong(item: RemixItem): PlayerSong {
-  const instrumentalUrl = getInstrumentalUrl(item.song.audio_url);
+  const instrumentalUrl = getInstrumentalUrl(item.song.title);
   return {
     id: item.song.id,
     title: item.theme,
     artist: item.song.title,
-    audioUrl: item.report?.narration_audio_url || instrumentalUrl || "",
+    // For remixes: use AI vocals if available, otherwise always use instrumental
+    audioUrl: item.report?.narration_audio_url || instrumentalUrl,
     lyrics: (item.version.lrc_data as any[]).map((l) => ({
       timeMs: l.timeMs,
       line: l.line,
     })),
   };
-}
-
-function getRemixAudioUrl(item: RemixItem) {
-  const instrumentalUrl = getInstrumentalUrl(item.song.audio_url);
-  return item.report?.narration_audio_url || instrumentalUrl || "";
 }
 
 interface ResizableLayoutProps {
@@ -170,13 +166,13 @@ export default function ResizableLayout({
 
           if (version && song) {
             const report = version.reports && version.reports[0];
-            const instrumentalUrl = getInstrumentalUrl(song.audio_url);
+            const instrumentalUrl = getInstrumentalUrl(song.title);
             const playerSong: PlayerSong = {
               id: song.id,
               title: song.title,
               artist: song.artist,
-              // If remix audio exists, use it. Otherwise use original (instrumental)
-              audioUrl: report?.narration_audio_url || instrumentalUrl || "",
+              // For remixes: use AI vocals if available, otherwise always use instrumental
+              audioUrl: report?.narration_audio_url || instrumentalUrl,
               lyrics: (version.lrc_data as any[]).map((l) => ({
                 timeMs: l.timeMs,
                 line: l.line,
@@ -234,11 +230,6 @@ export default function ResizableLayout({
   };
 
   const playRemix = (item: RemixItem) => {
-    const audioUrl = getRemixAudioUrl(item);
-    if (!audioUrl) {
-      console.warn("[Remix] No vocals or instrumental available", item);
-      return;
-    }
     setQueue([toRemixPlayerSong(item)]);
     setCurrentIndex(0);
   };
@@ -372,71 +363,56 @@ export default function ResizableLayout({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {activeGenre === "Remix"
-                ? filteredRemixes.map((item, i) => {
-                    const audioUrl = getRemixAudioUrl(item);
-                    const isPlayable = Boolean(audioUrl);
-                    return (
-                      <div key={item.version.id} className="group">
-                        <button
-                          onClick={() => playRemix(item)}
-                          className={`w-full text-left ${!isPlayable ? "cursor-not-allowed opacity-70" : ""}`}
-                          disabled={!isPlayable}
-                        >
-                          <div className="relative aspect-square rounded-xl overflow-hidden shadow-sm mb-2.5">
-                            {item.song.thumbnail_url ? (
-                              <img
-                                src={item.song.thumbnail_url}
-                                alt={item.song.title}
-                                className={`w-full h-full object-cover transition-transform duration-500 brightness-90 ${isPlayable ? "group-hover:scale-105" : ""}`}
-                              />
-                            ) : (
-                              <div
-                                className={`w-full h-full bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]} flex items-center justify-center`}
-                              >
-                                <Sparkles className="size-8 text-white/40" />
-                              </div>
-                            )}
-
-                            <div className="absolute top-1.5 left-1.5">
-                              <Badge className="bg-black/70 text-white text-[10px] font-bold border-none px-2 py-0.5 uppercase">
-                                Remix
-                              </Badge>
+                ? filteredRemixes.map((item, i) => (
+                    <div key={item.version.id} className="group">
+                      <button
+                        onClick={() => playRemix(item)}
+                        className="w-full text-left"
+                      >
+                        <div className="relative aspect-square rounded-xl overflow-hidden shadow-sm mb-2.5">
+                          {item.song.thumbnail_url ? (
+                            <img
+                              src={item.song.thumbnail_url}
+                              alt={item.song.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-90"
+                            />
+                          ) : (
+                            <div
+                              className={`w-full h-full bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]} flex items-center justify-center`}
+                            >
+                              <Sparkles className="size-8 text-white/40" />
                             </div>
+                          )}
 
-                            {!isPlayable && (
-                              <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-amber-600 text-white text-[10px] font-bold border-none px-2 py-0.5 uppercase">
-                                  No audio
-                                </Badge>
-                              </div>
-                            )}
-
-                            {isPlayable && (
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                                <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                                  <Play className="size-5 text-black fill-black ml-0.5" />
-                                </div>
-                              </div>
-                            )}
+                          <div className="absolute top-1.5 left-1.5">
+                            <Badge className="bg-black/70 text-white text-[10px] font-bold border-none px-2 py-0.5 uppercase">
+                              Remix
+                            </Badge>
                           </div>
-                        </button>
 
-                        <div className="flex items-start justify-between gap-1">
-                          <Link
-                            href={`/songs/${item.song.id}?version=${item.version.id}`}
-                            className="min-w-0 flex-1"
-                          >
-                            <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-                              {item.theme}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {item.song.title}
-                            </p>
-                          </Link>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                            <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                              <Play className="size-5 text-black fill-black ml-0.5" />
+                            </div>
+                          </div>
                         </div>
+                      </button>
+
+                      <div className="flex items-start justify-between gap-1">
+                        <Link
+                          href={`/songs/${item.song.id}?version=${item.version.id}`}
+                          className="min-w-0 flex-1"
+                        >
+                          <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                            {item.theme}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {item.song.title}
+                          </p>
+                        </Link>
                       </div>
-                    );
-                  })
+                    </div>
+                  ))
                 : filtered.map((song, i) => {
                     const isPlaying =
                       queue.length > 0 && queue[currentIndex]?.id === song.id;

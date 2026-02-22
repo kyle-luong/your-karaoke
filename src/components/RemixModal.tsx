@@ -44,6 +44,12 @@ interface RemixModalProps {
 
 type Step = "form" | "loading" | "result";
 
+/** The /api/generate-parody response includes the DB-persisted versionId */
+type ParodyResult = GenerateParodyResponse & {
+  versionId?: string;
+  projectId?: string;
+};
+
 export default function RemixModal({
   isOpen,
   onClose,
@@ -55,7 +61,7 @@ export default function RemixModal({
   const [tone, setTone] = useState<string>("silly");
   const [audience, setAudience] = useState<string>("teens");
   const [customIdea, setCustomIdea] = useState("");
-  const [result, setResult] = useState<GenerateParodyResponse | null>(null);
+  const [result, setResult] = useState<ParodyResult | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 

@@ -10,7 +10,7 @@
 
 const ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech";
 /** Premade voice that works on ElevenLabs free tier (Charlie - Deep, Confident, Energetic) */
-const PREMADE_FALLBACK_VOICE_ID = "ui0NMIinCTg8KvB4ogeV";
+const PREMADE_FALLBACK_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
 /** A single timed lyric line — mirrors LyricLine from utils/lrc-parser. */
 export interface LyricEntry {
