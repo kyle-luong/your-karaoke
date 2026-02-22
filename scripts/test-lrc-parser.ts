@@ -3,7 +3,7 @@ import parseLrcContent from "@/lib/utils/lrc-parser";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-const lrcPath = join(process.cwd(), "public/demo/lrcs/humble.txt");
+const lrcPath = join(process.cwd(), "public/demo/lrcs/smells-like-teen-spirit.txt");
 const content = readFileSync(lrcPath, "utf-8");
 const parsed = parseLrcContent(content);
 

@@ -145,7 +145,7 @@ export default function ResizableLayout({
   // Add song to end of queue
   const addToQueue = (song: Song) => {
     const ps = toPlayerSong(song);
-    if (queue.some((q) => q.id === ps.id)) return;
+    // Allow the same song to be queued multiple times — always append
     setQueue((prev) => [...prev, ps]);
   };
 
