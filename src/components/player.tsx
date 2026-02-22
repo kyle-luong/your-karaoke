@@ -442,8 +442,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     .player-fullscreen-btn {
       position: absolute;
       right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(0%);
     }
 
     .player-control-btn {

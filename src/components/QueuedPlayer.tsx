@@ -22,8 +22,26 @@ export default function QueuedPlayer({
 
   // Sync queue from parent when initialQueue changes
   useEffect(() => {
-    if (initialQueue.length > 0) {
-      setQueue(initialQueue);
+    if (initialQueue.length === 0) {
+      // parent cleared queue
+      setQueue([]);
+      setCurrentIndex(0);
+      return;
+    }
+
+    // Preserve currently playing song if possible when parent updates queue
+    const prevSongId = queue[currentIndex]?.id;
+    setQueue(initialQueue);
+    if (prevSongId) {
+      const newIndex = initialQueue.findIndex((s) => s.id === prevSongId);
+      if (newIndex !== -1) {
+        setCurrentIndex(newIndex);
+      } else {
+        // If previous song no longer in new queue, clamp index
+        setCurrentIndex((ci) => Math.max(0, Math.min(ci, initialQueue.length - 1)));
+      }
+    } else {
+      // No previous song — start at 0
       setCurrentIndex(0);
     }
   }, [initialQueue]);
