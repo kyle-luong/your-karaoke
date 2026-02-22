@@ -420,14 +420,29 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     }
 
     .player-btn-row {
+      position: relative;
       display: flex;
-      justify-content: center;
-      gap: 12px;
       align-items: center;
+      justify-content: center;
+      padding: 0 56px; /* leave room on the right for the fullscreen button */
     }
 
     .player-card.fullscreen .player-btn-row {
       gap: 30px;
+    }
+
+    .player-center-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-fullscreen-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     .player-control-btn {
@@ -562,12 +577,14 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
           <span className="player-time">{fmt(duration)}</span>
         </div>
         <div className="player-btn-row">
-          <button className="player-control-btn" onClick={onPreviousSong} title="Previous song" disabled={!onPreviousSong}>⏮</button>
-          <button className="player-play-btn" onClick={togglePlay}>
-            {isPlaying ? "⏸" : "▶"}
-          </button>
-          <button className="player-control-btn" onClick={onNextSong} title="Next song" disabled={!onNextSong}>⏭</button>
-          <button className="player-control-btn" onClick={toggleFullscreen} title="Fullscreen">⛶</button>
+          <div className="player-center-controls">
+            <button className="player-control-btn" onClick={onPreviousSong} title="Previous song" disabled={!onPreviousSong}>⏮</button>
+            <button className="player-play-btn" onClick={togglePlay}>
+              {isPlaying ? "⏸" : "▶"}
+            </button>
+            <button className="player-control-btn" onClick={onNextSong} title="Next song" disabled={!onNextSong}>⏭</button>
+          </div>
+          <button className="player-control-btn player-fullscreen-btn" onClick={toggleFullscreen} title="Fullscreen">⛶</button>
         </div>
       </div>
     </div>

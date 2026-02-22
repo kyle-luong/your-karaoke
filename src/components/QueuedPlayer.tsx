@@ -88,53 +88,12 @@ export default function QueuedPlayer({
             <div className="flex-1 flex items-center justify-center text-white/40 font-medium">
               No song playing
             </div>
-            
-            {/* Controls */}
-            <div className="p-4 border-t border-white/15 bg-black/20 flex flex-col gap-2.5">
-              {/* Progress bar (empty state) */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-white/60 font-medium min-w-fit">0:00</span>
-                <div className="flex-1 h-1 bg-white/15 rounded-full" />
-                <span className="text-xs text-white/60 font-medium min-w-fit">0:00</span>
-              </div>
-              
-              {/* Buttons */}
-              <div className="flex justify-center gap-3 items-center">
-                <button 
-                  disabled 
-                  className="w-9 h-9 rounded-lg border border-white/30 bg-gradient-to-br from-pink-500/20 to-pink-600/10 text-white/50 text-sm cursor-not-allowed flex items-center justify-center font-semibold opacity-40 transition-all"
-                  title="Previous song"
-                >
-                  ⏮
-                </button>
-                <button 
-                  disabled 
-                  className="w-11 h-11 rounded-full border-2 border-white/50 bg-gradient-to-br from-pink-500/30 to-pink-600/20 text-white/70 text-base cursor-not-allowed flex items-center justify-center font-semibold opacity-50 transition-all"
-                >
-                  ▶
-                </button>
-                <button 
-                  disabled 
-                  className="w-9 h-9 rounded-lg border border-white/30 bg-gradient-to-br from-pink-500/20 to-pink-600/10 text-white/50 text-sm cursor-not-allowed flex items-center justify-center font-semibold opacity-40 transition-all"
-                  title="Next song"
-                >
-                  ⏭
-                </button>
-                <button 
-                  disabled 
-                  className="w-9 h-9 rounded-lg border border-white/30 bg-gradient-to-br from-pink-500/20 to-pink-600/10 text-white/50 text-sm cursor-not-allowed flex items-center justify-center font-semibold opacity-40 transition-all"
-                  title="Fullscreen"
-                >
-                  ⛶
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>
 
       {/* Queue Display */}
-      <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-white border border-zinc-200 rounded-lg overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-4 py-3 border-b border-zinc-200 bg-zinc-50">
           <h3 className="font-bold text-sm uppercase tracking-wide text-zinc-900">
@@ -143,7 +102,7 @@ export default function QueuedPlayer({
         </div>
 
         {/* Queue Items */}
-        <div className="flex-1 overflow-y-auto max-h-48">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {queue.map((song, index) => (
             <div
               key={song.id}
