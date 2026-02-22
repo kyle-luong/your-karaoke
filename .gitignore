@@ -42,5 +42,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# generated parody outputs
+/public/generated/
+
 # local only files (not commited)
 *.local.*

@@ -8,6 +8,11 @@ export const themeOptions = ["food", "sports", "school", "office", "custom"] as 
 export const toneOptions = ["silly", "sarcastic", "wholesome", "dramatic"] as const;
 export const audienceOptions = ["kids", "teens", "adults"] as const;
 
+export const lrcLineSchema = z.object({
+  timestamp: z.number(),
+  text: z.string(),
+});
+
 export const generateParodyRequestSchema = z.object({
   songId: z.string().uuid(),
   originalLyrics: z.string().min(1),
@@ -15,6 +20,7 @@ export const generateParodyRequestSchema = z.object({
   tone: z.enum(toneOptions),
   audience: z.enum(audienceOptions),
   customIdea: z.string().max(200).optional(),
+  lrcLines: z.array(lrcLineSchema).optional(),
 });
 
 export type GenerateParodyRequest = z.infer<typeof generateParodyRequestSchema>;
@@ -29,7 +35,7 @@ export const transformationReportSchema = z.object({
 });
 
 export const generateParodyResponseSchema = z.object({
-  parodyLyrics: z.string(),
+  parodyLrcLines: z.array(lrcLineSchema),
   summaryNarration: z.string().max(300),
   transformationReport: transformationReportSchema,
   generatedAt: z.string().datetime(),

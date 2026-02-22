@@ -39,8 +39,8 @@ export const generateParodyJob = inngest.createFunction(
         .insert({
           project_id: projectId,
           type: "parody",
-          lyrics_text: result.parodyLyrics,
-          lrc_data: project.songs.lrc_data, // Re-use original timing for now
+          lyrics_text: result.parodyLrcLines.map((l) => l.text).join("\n"),
+          lrc_data: result.parodyLrcLines.map((l) => ({ timeMs: l.timestamp * 1000, line: l.text }))
         })
         .select()
         .single();
