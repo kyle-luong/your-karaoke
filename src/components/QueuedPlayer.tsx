@@ -40,6 +40,18 @@ export default function QueuedPlayer({
     }
   };
 
+  const handleNextSong = () => {
+    if (currentIndex < queue.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePreviousSong = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
   const addSongToQueue = (song: Song) => {
     setQueue([...queue, song]);
   };
@@ -63,7 +75,13 @@ export default function QueuedPlayer({
       {/* Player */}
       <div className="flex-1 min-h-0">
         {currentSong ? (
-          <Player song={currentSong} onSongEnd={handleSongEnd} compact={compact} />
+          <Player 
+            song={currentSong} 
+            onSongEnd={handleSongEnd}
+            onNextSong={currentIndex < queue.length - 1 ? handleNextSong : undefined}
+            onPreviousSong={currentIndex > 0 ? handlePreviousSong : undefined}
+            compact={compact} 
+          />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">
             No songs in queue

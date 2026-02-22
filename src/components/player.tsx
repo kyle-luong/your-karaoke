@@ -31,11 +31,13 @@ export interface Song {
 interface PlayerProps {
   song?: Song;
   onSongEnd?: () => void;
+  onNextSong?: () => void;
+  onPreviousSong?: () => void;
   lyrics?: Array<{ timestamp: number; text: string }>;
   compact?: boolean;
 }
 
-export default function Player({ song, onSongEnd, lyrics: propLyrics, compact = true }: PlayerProps = {}) {
+export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, lyrics: propLyrics, compact = true }: PlayerProps = {}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -94,6 +96,13 @@ export default function Player({ song, onSongEnd, lyrics: propLyrics, compact = 
       cancelled = true;
     };
   }, [song, propLyrics]);
+
+  // Autoplay next song when it changes
+  useEffect(() => {
+    if (song && audioRef.current && !isLoading) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [song, isLoading]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -437,6 +446,18 @@ export default function Player({ song, onSongEnd, lyrics: propLyrics, compact = 
       font-weight: 600;
     }
 
+    .player-control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .player-control-btn:disabled:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: linear-gradient(135deg, rgba(255, 0, 110, 0.2) 0%, rgba(255, 100, 150, 0.1) 100%);
+      color: rgba(240, 240, 240, 0.9);
+      transform: none;
+    }
+
     .player-control-btn:hover {
       border-color: rgba(255, 255, 255, 0.5);
       background: linear-gradient(135deg, rgba(255, 0, 110, 0.35) 0%, rgba(255, 100, 150, 0.25) 100%);
@@ -541,11 +562,11 @@ export default function Player({ song, onSongEnd, lyrics: propLyrics, compact = 
           <span className="player-time">{fmt(duration)}</span>
         </div>
         <div className="player-btn-row">
-          <button className="player-control-btn" onClick={() => skip(-5)} title="Rewind 5s">-5s</button>
+          <button className="player-control-btn" onClick={onPreviousSong} title="Previous song" disabled={!onPreviousSong}>⏮</button>
           <button className="player-play-btn" onClick={togglePlay}>
             {isPlaying ? "⏸" : "▶"}
           </button>
-          <button className="player-control-btn" onClick={() => skip(5)} title="Fast forward 5s">+5s</button>
+          <button className="player-control-btn" onClick={onNextSong} title="Next song" disabled={!onNextSong}>⏭</button>
           <button className="player-control-btn" onClick={toggleFullscreen} title="Fullscreen">⛶</button>
         </div>
       </div>
@@ -555,7 +576,7 @@ export default function Player({ song, onSongEnd, lyrics: propLyrics, compact = 
   return (
     <>
       <style>{cardStyles}</style>
-      <audio ref={audioRef} crossOrigin="anonymous" />
+      <audio ref={audioRef} crossOrigin="anonymous" autoPlay/>
 
       {compact ? (
         // In compact mode, render the card directly — no wrapper shell
