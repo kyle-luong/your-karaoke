@@ -22,6 +22,11 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Skip static assets served from /public (e.g. /demo/songs/believer.mp3)
+    if (url.pathname.startsWith("/demo")) {
+      return NextResponse.next();
+    }
+
     // Don't double-rewrite if already on /kids path
     if (!url.pathname.startsWith("/kids")) {
       url.pathname = `/kids${url.pathname === "/" ? "" : url.pathname}`;
