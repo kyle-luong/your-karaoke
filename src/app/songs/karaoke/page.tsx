@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Search,
   Mic2,
   Music,
   Guitar,
@@ -11,9 +10,7 @@ import {
   Heart,
   Star,
   TrendingUp,
-  ListMusic,
-  Clock,
-  PlusCircle,
+  Users,
 } from "lucide-react";
 import SongBrowser from "@/components/SongBrowser";
 import PlayerSidebar from "@/components/PlayerSidebar";
@@ -47,120 +44,73 @@ const GENRES = [
   { name: "R&B", icon: Heart, color: "text-red-500" },
 ];
 
-const SIDEBAR_NAV = [
-  { label: "Search", icon: Search, href: "#" },
-  { label: "Discover", icon: Star, href: "/songs/karaoke", active: true },
-  { label: "Playlists", icon: ListMusic, href: "#" },
-  { label: "Genres", icon: Music, href: "#" },
-  { label: "Top", icon: TrendingUp, href: "#" },
-];
-
 export default async function KaraokePage() {
   const supabase = await createServerSupabase();
   const { data } = await supabase.from("songs").select("*").order("title");
   const songs: Song[] = (data as Song[]) ?? [];
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      {/* ───── Left Sidebar ───── */}
-      <aside className="w-56 shrink-0 border-r bg-muted/30 hidden md:flex md:flex-col overflow-y-auto">
-        {/* Main nav */}
-        <nav className="p-4 space-y-1">
-          {SIDEBAR_NAV.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                ${item.active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-            >
-              <item.icon className="size-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* My Songs section */}
-        <div className="px-4 mt-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
-            My Songs
-          </p>
-          <Link
-            href="#"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            <Heart className="size-4" /> Favorites
-          </Link>
-          <Link
-            href="#"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            <Clock className="size-4" /> History
-          </Link>
-        </div>
-
-        {/* My Playlists section */}
-        <div className="px-4 mt-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
-            My Playlists
-          </p>
-          <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-primary hover:bg-accent transition-colors w-full">
-            <PlusCircle className="size-4" /> Create a Playlist...
-          </button>
-        </div>
-      </aside>
-
-      {/* ───── Middle Content ───── */}
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
+      {/* ───── Main Content ───── */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-6 py-8 space-y-12">
-          {/* Page header */}
-          <div>
+        <div className="mx-auto px-10 lg:px-14 py-10 space-y-10 max-w-6xl">
+          {/* Page header + Start Lobby button */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Link
+                href="/"
+                className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1"
+              >
+                ← Back to Home
+              </Link>
+              <h1 className="text-4xl font-black tracking-tighter uppercase italic mt-2">
+                Discover
+              </h1>
+            </div>
+
+            {/* Start Lobby button */}
             <Link
-              href="/"
-              className="text-xs text-muted-foreground hover:underline"
+              href="/party"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm uppercase tracking-wide hover:bg-primary/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all shrink-0"
             >
-              ← Home
+              <Users className="size-4" />
+              Start Lobby
             </Link>
-            <h1 className="text-3xl font-black tracking-tighter uppercase italic mt-1">
-              Discover
-            </h1>
           </div>
 
           {/* Promo banner */}
-          <div className="rounded-2xl bg-linear-to-r from-primary to-pink-400 p-6 flex items-center justify-between">
-            <div>
-              <p className="text-primary-foreground font-bold text-lg">
+          <div className="rounded-2xl bg-gradient-to-r from-primary to-pink-400 p-8 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-primary-foreground font-bold text-xl">
                 Sing without limits.
               </p>
               <p className="text-primary-foreground/80 text-sm">
                 Browse the full catalog and start flipping lyrics.
               </p>
             </div>
-            <span className="text-5xl">🎤</span>
+            <span className="text-6xl">🎤</span>
           </div>
 
           {/* Playlists */}
-          <section className="space-y-4">
+          <section className="space-y-5">
             <div className="flex justify-between items-end">
               <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
                 <Star className="size-5 text-primary" /> Playlists
               </h2>
-              <span className="text-xs font-bold text-primary">
+              <span className="text-xs font-bold text-primary cursor-pointer hover:underline">
                 COMING SOON →
               </span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
               {PLAYLISTS.map((pl) => (
                 <Card
                   key={pl.name}
                   className="overflow-hidden border-2 hover:-translate-y-1 transition-all cursor-pointer"
                 >
                   <div
-                    className={`h-28 bg-linear-to-br ${pl.gradient} flex items-center justify-center`}
+                    className={`h-32 bg-gradient-to-br ${pl.gradient} flex items-center justify-center`}
                   >
-                    <span className="text-4xl">{pl.emoji}</span>
+                    <span className="text-5xl">{pl.emoji}</span>
                   </div>
                   <CardContent className="p-3">
                     <p className="font-bold text-xs uppercase tracking-wide">
@@ -173,19 +123,19 @@ export default async function KaraokePage() {
           </section>
 
           {/* Genres */}
-          <section className="space-y-4">
+          <section className="space-y-5">
             <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
               <Music className="size-5 text-primary" /> Genres
             </h2>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
               {GENRES.map((g) => (
                 <Card
                   key={g.name}
                   className="hover:bg-accent cursor-pointer transition-all hover:-translate-y-1 group border-2"
                 >
-                  <CardContent className="p-4 flex flex-col items-center gap-2">
+                  <CardContent className="p-5 flex flex-col items-center gap-3">
                     <g.icon
-                      className={`size-8 ${g.color} group-hover:scale-110 transition-transform`}
+                      className={`size-9 ${g.color} group-hover:scale-110 transition-transform`}
                     />
                     <span className="font-bold uppercase text-xs tracking-widest">
                       {g.name}
@@ -197,7 +147,7 @@ export default async function KaraokePage() {
           </section>
 
           {/* Top Songs */}
-          <section className="space-y-4">
+          <section className="space-y-5">
             <div className="flex justify-between items-end">
               <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
                 <TrendingUp className="size-5 text-primary" /> Top
