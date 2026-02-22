@@ -181,13 +181,12 @@ export default async function KidsPage() {
       </ScrollSection>
 
       {/* ─── Footer ─── */}
-      <footer className="max-w-6xl mx-auto px-6 py-8 text-center space-y-2 border-t">
-        <p className="text-sm font-bold text-muted-foreground">
+      <footer className="max-w-6xl mx-auto px-6 py-4 text-center space-y-1 border-t border-border mt-4">
+        <p className="text-xs text-muted-foreground">
           🛡️ Lyric Lab Kids — Only safe, fun songs for young singers!
         </p>
-        <p className="text-xs text-muted-foreground">
-          Parents: All content on this page has been reviewed and marked as
-          child-safe.
+        <p className="text-[11px] text-muted-foreground/60">
+          All content on this page has been reviewed and marked as child-safe.
         </p>
       </footer>
     </main>
