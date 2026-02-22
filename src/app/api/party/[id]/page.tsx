@@ -52,7 +52,6 @@ export default function GuestPartyPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* ───── GUEST HEADER ───── */}
       <header className="border-b bg-card/50 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -82,12 +81,10 @@ export default function GuestPartyPage() {
         </div>
       </header>
 
-      {/* ───── MAIN STAGE AREA ───── */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-6xl aspect-video bg-black rounded-[32px] overflow-hidden border border-border shadow-2xl relative">
           
           {token === "" ? (
-            /* Loading State */
             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 bg-zinc-950 text-zinc-500">
               <Loader2 className="animate-spin text-primary" size={40} />
               <p className="text-xs font-black uppercase tracking-[0.3em] italic animate-pulse">
@@ -95,7 +92,6 @@ export default function GuestPartyPage() {
               </p>
             </div>
           ) : (
-            /* LIVEKIT ROOM (The actual video stage) */
             <LiveKitRoom
               video={true}
               audio={true}
@@ -109,13 +105,11 @@ export default function GuestPartyPage() {
                 router.push('/');
               }}
             >
-              {/* This handles the side-by-side grid of Host and Guest */}
               <VideoConference />
             </LiveKitRoom>
           )}
         </div>
 
-        {/* Guest Instructions */}
         <div className="mt-8 text-center max-w-md">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 mb-4">
             <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -129,7 +123,6 @@ export default function GuestPartyPage() {
         </div>
       </main>
 
-      {/* Footer Branding */}
       <footer className="py-6 flex justify-center opacity-30">
         <div className="flex items-center gap-2">
           <Music size={14} />

@@ -26,7 +26,6 @@ import '@livekit/components-styles';
 import type { Song } from "@/lib/types/database";
 import type { Song as PlayerSong } from "@/components/player";
 
-// ... (CONSTANTS AND toPlayerSong REMAIN THE SAME) ...
 const GENRES = [
   { name: "All", icon: Music, color: "text-primary" },
   { name: "Rap", icon: Mic2, color: "text-blue-500", match: ["Hip-Hop", "Rap"] },
