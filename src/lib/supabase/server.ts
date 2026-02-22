@@ -16,11 +16,9 @@ export async function createServerSupabase() {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
-          } catch {
-            // setAll is called from Server Components where cookies
-            // are read-only. The error is safe to ignore — the Supabase
-            // client will still work for reading data; it just can't
-            // refresh the session token in this context.
+          } catch (error) {
+            // Silently ignore cookie errors during SSR
+            // Cookies can only be modified in Server Actions or Route Handlers
           }
         },
       },
