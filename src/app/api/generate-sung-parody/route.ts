@@ -5,9 +5,10 @@
  *   1. Validate request (parodyLrcLines + instrumentalUrl + songId)
  *   2. Read instrumental MP3 (local filesystem or HTTP)
  *   3. Generate vocal segments via ElevenLabs
- *   4. Mix vocals onto instrumental via ffmpeg
- *   5. Save outputs to local or Supabase storage
- *   6. Return public URLs + metadata
+ *   4. (Optional) Voice conversion via Replicate RVC ("Studio Skin")
+ *   5. Mix vocals onto instrumental via ffmpeg
+ *   6. Save outputs to local or Supabase storage
+ *   7. Return public URLs + metadata
  */
 
 import { NextResponse } from "next/server";
@@ -19,12 +20,16 @@ import { mixAudio } from "@/lib/audio-mixer";
 import { saveGeneratedFile } from "@/lib/utils/storage";
 import { serializeToLrc } from "@/lib/utils/lrc-serializer";
 import { lrcLineSchema } from "@/lib/schemas/parody";
+import { convertVoice } from "@/lib/services/voice-conversion";
 
 const requestSchema = z.object({
   songId: z.string().min(1),
   parodyLrcLines: z.array(lrcLineSchema).min(1),
   instrumentalUrl: z.string().min(1),
   voiceId: z.string().min(1).optional(),
+  useVoiceConversion: z.boolean().optional(),
+  songGenre: z.string().optional(),
+  contentType: z.enum(["parody", "educational"]).optional(),
 });
 
 function errorJson(message: string, status: number) {
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { songId, parodyLrcLines, instrumentalUrl, voiceId } = parsed.data;
+  const { songId, parodyLrcLines, instrumentalUrl, voiceId, useVoiceConversion, songGenre, contentType } = parsed.data;
 
   // 1. Read instrumental
   let instrumentalBuffer: Buffer;
@@ -76,7 +81,22 @@ export async function POST(request: Request) {
     return errorJson("Voice generation failed", 502);
   }
 
-  // 3. Mix vocals onto instrumental
+  // 3. (Optional) Replicate RVC voice conversion on vocal segments
+  if (useVoiceConversion) {
+    try {
+      for (let i = 0; i < segments.length; i++) {
+        segments[i].audioBuffer = await convertVoice(segments[i].audioBuffer, {
+          genre: songGenre,
+          contentType,
+        });
+      }
+    } catch (err) {
+      console.error("[generate-sung-parody] Voice conversion error:", err);
+      // Continue with unconverted vocals rather than failing the whole pipeline
+    }
+  }
+
+  // 4. Mix vocals onto instrumental
   let mixedMp3: Buffer;
   let vocalsMp3: Buffer;
   let instrumentalMp3: Buffer;
@@ -92,7 +112,7 @@ export async function POST(request: Request) {
     return errorJson("Audio processing failed", 500);
   }
 
-  // 4. Save outputs
+  // 5. Save outputs
   try {
     const mp3Url = await saveGeneratedFile(songId, "sung-parody.mp3", mixedMp3);
     const vocalsUrl = await saveGeneratedFile(songId, "vocals.mp3", vocalsMp3);

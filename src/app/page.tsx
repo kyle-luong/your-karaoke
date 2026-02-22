@@ -1,5 +1,6 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HomeActions } from "@/components/shared/home-actions";
 import {
@@ -8,6 +9,7 @@ import {
   Guitar,
   Zap,
   Heart,
+  Disc,
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
@@ -63,7 +65,7 @@ export default async function LibraryPage() {
     .select("*")
     .order("title");
 
-  // Fetch parody versions with their project's song_id
+  // Fetch parody versions with their project's song_id and reports
   const { data: versions } = await supabase
     .from("versions")
     .select("*, projects!inner(song_id)")
@@ -71,11 +73,23 @@ export default async function LibraryPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  // Build remix list: version + parent song
-  type Remix = { version: Version; song: Song; songId: string };
+  // Fetch reports for themes
+  const versionIds = (versions as any[])?.map((v) => v.id) ?? [];
+  const { data: reports } =
+    versionIds.length > 0
+      ? await supabase
+          .from("reports")
+          .select("version_id, transformation_metadata")
+          .in("version_id", versionIds)
+      : { data: [] };
+
+  // Build remix list: version + parent song + theme
+  type Remix = { version: Version; song: Song; songId: string; theme: string };
   const remixes: Remix[] = [];
   const songMap = new Map<string, Song>();
   ((songs as Song[]) ?? []).forEach((s) => songMap.set(s.id, s));
+  const reportMap = new Map<string, any>();
+  (reports as any[])?.forEach((r) => reportMap.set(r.version_id, r));
 
   if (versions) {
     for (const v of versions as (Version & {
@@ -83,8 +97,10 @@ export default async function LibraryPage() {
     })[]) {
       const songId = v.projects.song_id;
       const song = songMap.get(songId);
+      const report = reportMap.get(v.id);
+      const theme = report?.transformation_metadata?.mainTheme ?? "Remix";
       if (song) {
-        remixes.push({ version: v, song, songId });
+        remixes.push({ version: v, song, songId, theme });
       }
     }
   }
@@ -101,16 +117,15 @@ export default async function LibraryPage() {
             className="px-3 py-1 text-sm border-primary/50 text-primary"
           >
             <Sparkles className="mr-2 size-3 inline" />
-            AI Lyric Sanitizer
+            AI Lyric Remixer
           </Badge>
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic">
-            SCRUB THE <span className="text-primary">DIRT.</span>
+            REWRITE. <span className="text-primary">RECORD.</span>
             <br />
-            KEEP THE <span className="text-primary">BEAT.</span>
+            <span className="text-primary">SHARE.</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-lg">
-            Lyric Lab automatically cleans explicit tracks and helps you flip
-            them into hilarious, kid-safe parodies.
+            LyricLab reimagines your favorite songs to sing with friends.
           </p>
           <HomeActions isAuthenticated={!!user} />
         </div>
@@ -172,7 +187,7 @@ export default async function LibraryPage() {
               key={r.version.id}
               className="shrink-0"
             >
-              <RemixCard song={r.song} version={r.version} />
+              <RemixCard song={r.song} version={r.version} theme={r.theme} />
             </Link>
           ))
         )}
@@ -260,7 +275,15 @@ function SongCard({ song, gradient }: { song: Song; gradient: string }) {
 }
 
 /* ── Remix card (standardized size, same as SongCard) ── */
-function RemixCard({ song, version }: { song: Song; version: Version }) {
+function RemixCard({
+  song,
+  version,
+  theme,
+}: {
+  song: Song;
+  version: Version;
+  theme: string;
+}) {
   return (
     <div
       className="w-44 group cursor-pointer"
@@ -286,11 +309,9 @@ function RemixCard({ song, version }: { song: Song; version: Version }) {
         </div>
       </div>
       <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-        {song.title}
+        {theme} Remix
       </p>
-      <p className="text-xs text-muted-foreground truncate">
-        Parody · {song.artist}
-      </p>
+      <p className="text-xs text-muted-foreground truncate">{song.title}</p>
     </div>
   );
 }

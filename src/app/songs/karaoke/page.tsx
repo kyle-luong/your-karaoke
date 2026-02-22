@@ -1,6 +1,6 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import ResizableLayout from "@/components/ResizableLayout";
-import type { Song } from "@/lib/types/database";
+import type { Song, Version, Report } from "@/lib/types/database";
 
 export default async function KaraokePage() {
   const supabase = await createServerSupabase();
@@ -28,7 +28,7 @@ export default async function KaraokePage() {
       // Map project_id → song_id
       const projectToSong = new Map<string, string>();
       projects.forEach((p: { id: string; song_id: string }) =>
-        projectToSong.set(p.id, p.song_id)
+        projectToSong.set(p.id, p.song_id),
       );
 
       // Count versions per song
@@ -41,5 +41,51 @@ export default async function KaraokePage() {
     }
   }
 
-  return <ResizableLayout songs={songs} remixCounts={remixCounts} />;
+  // Build remix items (version + song + report) for Remix view
+  type RemixItem = {
+    version: Version;
+    song: Song;
+    report: Report | null;
+    theme: string;
+  };
+  const remixItems: RemixItem[] = [];
+
+  if (songs.length > 0) {
+    const { data: versions } = await supabase
+      .from("versions")
+      .select("*, projects!inner(song_id)")
+      .eq("type", "parody")
+      .order("created_at", { ascending: false });
+
+    const versionIds = (versions as Version[] | null)?.map((v) => v.id) ?? [];
+    const { data: reports } = versionIds.length
+      ? await supabase.from("reports").select("*").in("version_id", versionIds)
+      : { data: [] };
+
+    const reportMap = new Map<string, Report>();
+    (reports as Report[] | null)?.forEach((r) =>
+      reportMap.set(r.version_id, r),
+    );
+
+    const songMap = new Map<string, Song>();
+    songs.forEach((s) => songMap.set(s.id, s));
+
+    (
+      versions as (Version & { projects: { song_id: string } })[] | null
+    )?.forEach((v) => {
+      const song = songMap.get(v.projects.song_id);
+      if (!song) return;
+      const report = reportMap.get(v.id) ?? null;
+      const theme = report?.transformation_metadata?.mainTheme ?? "Remix";
+      remixItems.push({ version: v, song, report, theme });
+    });
+  }
+
+  return (
+    <ResizableLayout
+      songs={songs}
+      remixCounts={remixCounts}
+      remixItems={remixItems}
+    />
+  );
 }

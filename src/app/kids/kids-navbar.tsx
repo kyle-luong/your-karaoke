@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle, signOut } from "@/app/frontend/auth";
@@ -20,19 +21,23 @@ interface KidsNavbarProps {
 
 export function KidsNavbar({ userEmail, userImage }: KidsNavbarProps) {
   return (
-    <nav className="kids-navbar sticky top-0 z-50 shadow-lg">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <nav className="bg-white border-b sticky top-0 z-50 shadow-sm">
+      <div className="container mx-auto px-10 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2 hover:opacity-90 transition-opacity"
         >
-          <span className="text-3xl" role="img" aria-label="star">
-            ⭐
-          </span>
-          <span className="text-xl font-black tracking-tight text-white drop-shadow-sm">
-            Lyric<span className="text-yellow-200">Lab</span>{" "}
-            <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-sm font-bold">
+          <Image
+            src="/image.png"
+            alt="LyricLab logo"
+            width={52}
+            height={52}
+            className="rounded-lg"
+          />
+          <span className="text-xl font-black tracking-tight text-black">
+            LYRICLAB{" "}
+            <span className="bg-gray-100 px-2 py-0.5 rounded-full text-sm font-bold text-black">
               Kids
             </span>
           </span>
@@ -42,7 +47,7 @@ export function KidsNavbar({ userEmail, userImage }: KidsNavbarProps) {
         <div className="flex items-center gap-2">
           <Link
             href="/songs/karaoke"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wide hover:bg-white/30 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wide hover:bg-gray-200 transition-colors"
           >
             🎤 Sing
           </Link>
@@ -53,7 +58,7 @@ export function KidsNavbar({ userEmail, userImage }: KidsNavbarProps) {
                 : "";
               window.location.href = `${window.location.protocol}//localhost${port}`;
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wide hover:bg-white/30 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wide hover:bg-gray-200 transition-colors"
           >
             🔙 Main Site
           </button>
@@ -65,7 +70,7 @@ export function KidsNavbar({ userEmail, userImage }: KidsNavbarProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full border border-white/30 overflow-hidden"
+                  className="rounded-full border border-gray-200 overflow-hidden"
                 >
                   {userImage ? (
                     <img
@@ -75,7 +80,7 @@ export function KidsNavbar({ userEmail, userImage }: KidsNavbarProps) {
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <User className="size-5 text-white" />
+                    <User className="size-5 text-gray-600" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -110,7 +115,7 @@ export function KidsNavbar({ userEmail, userImage }: KidsNavbarProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2 text-white border border-white/30 hover:bg-white/20 hover:text-white"
+              className="gap-2 text-gray-700 border border-gray-200 hover:bg-gray-100"
               onClick={() => signInWithGoogle()}
             >
               <div className="bg-white p-0.5 rounded-sm">
