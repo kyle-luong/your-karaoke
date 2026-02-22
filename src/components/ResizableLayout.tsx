@@ -72,8 +72,6 @@ function formatDuration(sec: number) {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }
 
-/* ─── LiveKit Video Components ─── */
-
 function StageVideo() {
   const tracks = useTracks(
     [
@@ -141,9 +139,6 @@ function VideoStage({ token }: { token: string }) {
   );
 }
 
-/* ─── Song Helpers ─── */
-
-// Convert DB Song → Player Song format (with lyrics!)
 function toPlayerSong(song: Song): PlayerSong {
   const lyrics =
     song.lrc_data && Array.isArray(song.lrc_data)
@@ -177,7 +172,6 @@ function toRemixPlayerSong(item: RemixItem): PlayerSong {
     id: item.song.id,
     title: item.theme,
     artist: item.song.title,
-    // For remixes: use AI vocals if available, otherwise always use instrumental
     audioUrl: item.report?.narration_audio_url || instrumentalUrl,
     lyrics: (item.version.lrc_data as any[]).map((l) => ({
       timeMs: l.timeMs,
@@ -186,7 +180,6 @@ function toRemixPlayerSong(item: RemixItem): PlayerSong {
   };
 }
 
-/* ─── Types ─── */
 
 type RemixItem = {
   version: Version;
@@ -203,8 +196,6 @@ interface ResizableLayoutProps {
   isGuest?: boolean;
 }
 
-/* ─── Main Component ─── */
-
 export default function ResizableLayout({
   songs,
   remixCounts = {},
@@ -218,11 +209,9 @@ export default function ResizableLayout({
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Filter state
   const [activeGenre, setActiveGenre] = useState("All");
   const [search, setSearch] = useState("");
 
-  // Lobby state
   const [lobbyActive, setLobbyActive] = useState(false);
   const [lobbyId, setLobbyId] = useState<string | null>(
     initialLobbyId || null,
@@ -231,7 +220,6 @@ export default function ResizableLayout({
   const [copied, setCopied] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Queue state
   const [queue, setQueue] = useState<PlayerSong[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [initialised, setInitialised] = useState(false);
@@ -244,7 +232,6 @@ export default function ResizableLayout({
     if (initialLobbyId) setLobbyActive(true);
   }, [initialLobbyId]);
 
-  // LiveKit token fetch
   useEffect(() => {
     if (lobbyActive && lobbyId && !token) {
       const fetchToken = async () => {
@@ -278,7 +265,7 @@ export default function ResizableLayout({
 
   const copyInvite = () => {
     if (lobbyId) {
-      const inviteLink = `${window.location.origin}/party/${lobbyId}`;
+      const inviteLink = `https://unsilicified-grimiest-rupert.ngrok-free.dev/party/${lobbyId}`;
       navigator.clipboard.writeText(inviteLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -286,7 +273,6 @@ export default function ResizableLayout({
     }
   };
 
-  // Auto-play from URL params
   useEffect(() => {
     if (initialised) return;
     const playId = searchParams.get("play");
@@ -298,7 +284,6 @@ export default function ResizableLayout({
         return;
       }
 
-      // If versionId is present, we need to fetch the version lyrics
       if (versionId) {
         try {
           const supabase = createClient();
@@ -346,7 +331,6 @@ export default function ResizableLayout({
     initPlay();
   }, [searchParams, songs, initialised]);
 
-  // Resize handler
   useEffect(() => {
     const move = (e: MouseEvent) => {
       if (!isResizing || !containerRef.current) return;
@@ -364,7 +348,6 @@ export default function ResizableLayout({
     };
   }, [isResizing]);
 
-  // Play a song (replace queue with just this song)
   const playSong = (song: Song) => {
     setQueue([toPlayerSong(song)]);
     setCurrentIndex(0);
@@ -375,13 +358,11 @@ export default function ResizableLayout({
     setCurrentIndex(0);
   };
 
-  // Add song to end of queue
   const addToQueue = (song: Song) => {
     const ps = toPlayerSong(song);
     setQueue((prev) => [...prev, ps]);
   };
 
-  // Filter songs
   const filtered = songs.filter((s) => {
     if (activeGenre === "Remix") {
       return (remixCounts[s.id] ?? 0) > 0;
@@ -433,7 +414,6 @@ export default function ResizableLayout({
       ref={containerRef}
       className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background relative"
     >
-      {/* Lobby confirmation modal */}
       {showConfirm && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-card p-8 rounded-[32px] border border-border text-center max-w-sm">
@@ -458,10 +438,8 @@ export default function ResizableLayout({
         </div>
       )}
 
-      {/* ───── Main Content ───── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <div className="shrink-0 border-b bg-background z-20 p-4 lg:p-6 pb-2 space-y-4">
-          {/* Lobby header */}
           {!lobbyActive ? (
             <div className="flex justify-between items-center">
               <Link
@@ -509,7 +487,6 @@ export default function ResizableLayout({
             </div>
           )}
 
-          {/* Genre pills */}
           <div className="flex gap-2 flex-wrap">
             {GENRES.map((g) => (
               <button
@@ -527,7 +504,6 @@ export default function ResizableLayout({
             ))}
           </div>
 
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <input
@@ -539,7 +515,6 @@ export default function ResizableLayout({
             />
           </div>
 
-          {/* Song count */}
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground font-medium">
               {itemCount} {itemCount === 1 ? "item" : "items"}
@@ -547,7 +522,6 @@ export default function ResizableLayout({
           </div>
         </div>
 
-        {/* Song grid */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-2">
           {itemCount === 0 ? (
             <div className="py-16 text-center border-2 border-dashed rounded-2xl bg-muted/20">
@@ -704,7 +678,6 @@ export default function ResizableLayout({
         </div>
       </div>
 
-      {/* ───── Draggable Divider ───── */}
       <div
         onMouseDown={() => setIsResizing(true)}
         className={`w-1 hover:bg-primary/50 cursor-col-resize transition-colors ${
@@ -712,7 +685,6 @@ export default function ResizableLayout({
         }`}
       />
 
-      {/* ───── Right Sidebar (Player + Queue) ───── */}
       <aside
         className="border-l bg-card overflow-hidden flex flex-col"
         style={{ width: `${sidebarWidth}px` }}
