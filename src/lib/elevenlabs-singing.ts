@@ -10,7 +10,7 @@
 
 const ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech";
 /** Premade voice that works on ElevenLabs free tier (Charlie - Deep, Confident, Energetic) */
-const PREMADE_FALLBACK_VOICE_ID = "ui0NMIinCTg8KvB4ogeV";
+const PREMADE_FALLBACK_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
 /** A single timed lyric line — mirrors LyricLine from utils/lrc-parser. */
 export interface LyricEntry {
@@ -54,10 +54,18 @@ async function synthesizeLine(
   });
 
   if (!response.ok) {
-    if (response.status === 402) {
-      throw new Error("ElevenLabs character quota exceeded. Please check your billing or use a different API key.");
+    const errorBody = await response.text().catch(() => "");
+    console.error(`[elevenlabs] API error ${response.status} (voice: ${voiceId}):`, errorBody);
+    // 402 with "paid_plan_required" means the voice is a library voice not usable on free tier
+    // Retry with the premade fallback voice
+    if (response.status === 402 && voiceId !== PREMADE_FALLBACK_VOICE_ID) {
+      console.warn(`[elevenlabs] Voice ${voiceId} requires paid plan — falling back to premade voice`);
+      return synthesizeLine(text, PREMADE_FALLBACK_VOICE_ID, apiKey);
     }
-    throw new Error(`ElevenLabs API error: ${response.status}`);
+    if (response.status === 402) {
+      throw new Error(`ElevenLabs quota exceeded: ${errorBody}`);
+    }
+    throw new Error(`ElevenLabs API error: ${response.status} — ${errorBody}`);
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -77,8 +85,8 @@ export async function generateVocalSegments(
   voiceIdOverride?: string,
 ): Promise<VocalSegment[]> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const voiceId =
-    voiceIdOverride ?? process.env.ELEVENLABS_VOICE_ID ?? PREMADE_FALLBACK_VOICE_ID;
+  // Always use premade voice on free tier — library voices require paid plan
+  const voiceId = voiceIdOverride ?? PREMADE_FALLBACK_VOICE_ID;
 
   if (!apiKey) {
     throw new Error("ELEVENLABS_API_KEY is not set");
