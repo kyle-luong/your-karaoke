@@ -9,6 +9,8 @@
  */
 
 const ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech";
+/** Premade voice that works on ElevenLabs free tier (Charlie - Deep, Confident, Energetic) */
+const PREMADE_FALLBACK_VOICE_ID = "ui0NMIinCTg8KvB4ogeV";
 
 /** A single timed lyric line — mirrors LyricLine from utils/lrc-parser. */
 export interface LyricEntry {
@@ -33,7 +35,8 @@ async function synthesizeLine(
   voiceId: string,
   apiKey: string,
 ): Promise<Buffer> {
-  const response = await fetch(`${ELEVENLABS_TTS_URL}/${voiceId}`, {
+  // Use the streaming endpoint with eleven_flash_v2_5 — works on free tier
+  const response = await fetch(`${ELEVENLABS_TTS_URL}/${voiceId}/stream`, {
     method: "POST",
     headers: {
       "xi-api-key": apiKey,
@@ -42,7 +45,7 @@ async function synthesizeLine(
     },
     body: JSON.stringify({
       text,
-      model_id: "eleven_monolingual_v1",
+      model_id: "eleven_flash_v2_5",
       voice_settings: {
         stability: 0.5,
         similarity_boost: 0.75,
@@ -71,7 +74,8 @@ export async function generateVocalSegments(
   voiceIdOverride?: string,
 ): Promise<VocalSegment[]> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const voiceId = voiceIdOverride ?? process.env.ELEVENLABS_VOICE_ID;
+  const voiceId =
+    voiceIdOverride ?? process.env.ELEVENLABS_VOICE_ID ?? PREMADE_FALLBACK_VOICE_ID;
 
   if (!apiKey) {
     throw new Error("ELEVENLABS_API_KEY is not set");

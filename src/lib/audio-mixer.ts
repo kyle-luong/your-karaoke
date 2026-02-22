@@ -36,23 +36,38 @@ export async function probeDurationMs(filePath: string): Promise<number> {
 }
 
 /**
- * Overlay vocal segments onto an instrumental track and produce a single MP3.
+ * Overlay vocal segments onto an instrumental track and produce three MP3s:
+ *   - mixedMp3: vocals overlaid onto instrumental (ready to play)
+ *   - vocalsMp3: vocals only (for karaoke / custom mixing)
+ *   - instrumentalMp3: instrumental only (pass-through of input)
  *
  * Strategy:
  *  1. Write the instrumental to a temp file.
  *  2. Write each vocal segment to its own temp file.
  *  3. Build an ffmpeg filter_complex that delays each vocal segment by its
- *     LRC timestamp, mixes them together, then overlays the mix onto the
- *     instrumental.
- *  4. Read the output MP3 and return the buffer + duration.
+ *     LRC timestamp, mixes them together, then:
+ *       a. Output the vocals-only mix.
+ *       b. Overlay the vocals onto the instrumental for the pre-mixed output.
+ *  4. Read all outputs and return the buffers + duration.
  *
  * The instrumental duration is preserved — vocals that extend beyond the end
  * are trimmed automatically.
  */
+export interface MixAudioResult {
+  /** Pre-mixed MP3: vocals overlaid onto instrumental. */
+  mixedMp3: Buffer;
+  /** Vocals-only MP3: all vocal segments mixed together, no instrumental. */
+  vocalsMp3: Buffer;
+  /** Instrumental MP3: the original instrumental, passed through. */
+  instrumentalMp3: Buffer;
+  /** Duration of the mixed output in milliseconds. */
+  durationMs: number;
+}
+
 export async function mixAudio(
   instrumentalBuffer: Buffer,
   segments: VocalSegment[],
-): Promise<{ mixedMp3: Buffer; durationMs: number }> {
+): Promise<MixAudioResult> {
   // Create a temp working directory
   const workDir = await mkdtemp(join(tmpdir(), "karaoke-mix-"));
 
@@ -60,8 +75,6 @@ export async function mixAudio(
     // 1. Write instrumental
     const instrumentalPath = join(workDir, "instrumental.mp3");
     await writeFile(instrumentalPath, instrumentalBuffer);
-
-    const instrumentalDuration = await probeDurationMs(instrumentalPath);
 
     // 2. Write each vocal segment
     const segmentPaths: string[] = [];
@@ -71,11 +84,12 @@ export async function mixAudio(
       segmentPaths.push(p);
     }
 
-    // 3. Build ffmpeg command
-    const outputPath = join(workDir, "final.mp3");
+    // 3. Build ffmpeg commands
+    const mixedOutputPath = join(workDir, "final.mp3");
+    const vocalsOutputPath = join(workDir, "vocals.mp3");
 
     if (segments.length === 0) {
-      // No vocals — just copy the instrumental
+      // No vocals — just copy the instrumental as the mixed output
       await execFileAsync("ffmpeg", [
         "-y",
         "-i",
@@ -84,7 +98,25 @@ export async function mixAudio(
         "libmp3lame",
         "-q:a",
         "2",
-        outputPath,
+        mixedOutputPath,
+      ]);
+
+      // Create a silent vocals file matching instrumental duration
+      const instDuration = await probeDurationMs(instrumentalPath);
+      const instDurationSec = (instDuration / 1000).toFixed(3);
+      await execFileAsync("ffmpeg", [
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        `anullsrc=r=44100:cl=stereo`,
+        "-t",
+        instDurationSec,
+        "-c:a",
+        "libmp3lame",
+        "-q:a",
+        "2",
+        vocalsOutputPath,
       ]);
     } else {
       // Build input list: instrumental first, then each segment
@@ -94,32 +126,29 @@ export async function mixAudio(
       }
 
       // Build filter_complex
-      // For each vocal segment: delay it by its LRC timeMs, then mix all
-      // delayed vocals together, then overlay onto instrumental.
       const filters: string[] = [];
 
       for (let i = 0; i < segments.length; i++) {
-        // entry.timestamp is in seconds; adelay needs milliseconds
         const delayMs = Math.round(segments[i].entry.timestamp * 1000);
-        // [inputIndex+1] because [0] is instrumental
         filters.push(
-          `[${i + 1}:a]adelay=${delayMs}|${delayMs},volume=1.0[v${i}]`,
+          `[${i + 1}:a]adelay=${delayMs}|${delayMs},volume=3.0[v${i}]`,
         );
       }
 
-      // Mix all vocals together
+      // Mix all vocals together → [vocals]
       const vocalInputs = segments.map((_, i) => `[v${i}]`).join("");
       filters.push(
         `${vocalInputs}amix=inputs=${segments.length}:duration=longest:dropout_transition=0[vocals]`,
       );
 
-      // Overlay vocals onto instrumental
+      // Overlay vocals onto instrumental → [out]
       filters.push(
-        `[0:a][vocals]amix=inputs=2:duration=first:dropout_transition=0[out]`,
+        `[0:a]volume=0.15[inst];[inst][vocals]amix=inputs=2:duration=first:dropout_transition=0[out]`,
       );
 
       const filterComplex = filters.join(";");
 
+      // Pass 1: generate the pre-mixed output
       inputs.push(
         "-filter_complex",
         filterComplex,
@@ -129,17 +158,55 @@ export async function mixAudio(
         "libmp3lame",
         "-q:a",
         "2",
-        outputPath,
+        mixedOutputPath,
       );
 
       await execFileAsync("ffmpeg", inputs);
+
+      // Pass 2: generate the vocals-only output
+      const vocalsInputs: string[] = ["-y"];
+      for (const sp of segmentPaths) {
+        vocalsInputs.push("-i", sp);
+      }
+
+      const vocalsFilters: string[] = [];
+      for (let i = 0; i < segments.length; i++) {
+        const delayMs = Math.round(segments[i].entry.timestamp * 1000);
+        vocalsFilters.push(
+          `[${i}:a]adelay=${delayMs}|${delayMs},volume=3.0[v${i}]`,
+        );
+      }
+      const vocalsVocalInputs = segments.map((_, i) => `[v${i}]`).join("");
+      vocalsFilters.push(
+        `${vocalsVocalInputs}amix=inputs=${segments.length}:duration=longest:dropout_transition=0[vocalsout]`,
+      );
+
+      vocalsInputs.push(
+        "-filter_complex",
+        vocalsFilters.join(";"),
+        "-map",
+        "[vocalsout]",
+        "-c:a",
+        "libmp3lame",
+        "-q:a",
+        "2",
+        vocalsOutputPath,
+      );
+
+      await execFileAsync("ffmpeg", vocalsInputs);
     }
 
-    // 4. Read result
-    const mixedMp3 = await readFile(outputPath);
-    const durationMs = await probeDurationMs(outputPath);
+    // 4. Read results
+    const mixedMp3 = await readFile(mixedOutputPath);
+    const vocalsMp3 = await readFile(vocalsOutputPath);
+    const durationMs = await probeDurationMs(mixedOutputPath);
 
-    return { mixedMp3, durationMs };
+    return {
+      mixedMp3,
+      vocalsMp3,
+      instrumentalMp3: instrumentalBuffer,
+      durationMs,
+    };
   } finally {
     // Cleanup temp dir
     await rm(workDir, { recursive: true, force: true }).catch(() => {
