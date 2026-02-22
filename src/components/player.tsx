@@ -173,7 +173,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     }
   };
 
-  const toggleKaraoke = () => {
+  const toggleKaraoke = async () => {
     const audio = audioRef.current;
     if (!audio || !song) return;
     const nextKaraoke = !isKaraokeMode;
@@ -200,8 +200,14 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     audio.addEventListener('loadedmetadata', onLoaded);
 
     if (nextKaraoke) {
-      const title = parseTitle(song.title);
-      const instrumentalUrl = `/demo/instrumentals/${title}-instrumental.mp3`;
+      const titleSlug = parseTitle(song.title);
+      const artistSlug = parseTitle(song.artist);
+
+      const primaryUrl = `/demo/instrumentals/${titleSlug}-instrumental.mp3`;
+      const fallbackUrl = `/demo/instrumentals/${artistSlug}-instrumental.mp3`;
+
+      const res = await fetch(primaryUrl, { method: 'HEAD' });
+      const instrumentalUrl = res.ok ? primaryUrl : fallbackUrl;
       audio.src = instrumentalUrl;
     } else {
       audio.src = song.audioUrl;

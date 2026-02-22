@@ -422,17 +422,20 @@ export default function ResizableLayout({
                         </button>
 
                         <div className="flex items-start justify-between gap-1">
-                          <Link
-                            href={`/songs/${item.song.id}?version=${item.version.id}`}
-                            className="min-w-0 flex-1"
-                          >
+                          <Link href={`/songs/${item.song.id}?version=${item.version.id}`} className="min-w-0 flex-1">
                             <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
                               {item.theme}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {item.song.title}
-                            </p>
+                            <p className="text-xs text-muted-foreground truncate">{item.song.title}</p>
                           </Link>
+                          <button
+                            onClick={() => setQueue((prev) => [...prev, toRemixPlayerSong(item)])}
+                            className="shrink-0 mt-0.5 p-1 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                            title="Add to queue"
+                            disabled={!isPlayable}
+                          >
+                            <Plus className="size-4" />
+                          </button>
                         </div>
                       </div>
                     );
