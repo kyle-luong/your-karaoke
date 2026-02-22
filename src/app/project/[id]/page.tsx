@@ -207,9 +207,9 @@ export default function ProjectPage() {
 
           {sungError && <p className="text-destructive text-sm">{sungError}</p>}
 
-          {sungResult && (
+          {/* {sungResult && (
             <Player lyrics={sungResult.parodyLrcLines} />
-          )}
+          )} */}
         </div>
       )}
     </main>

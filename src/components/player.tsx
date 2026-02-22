@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import parseLrcContent from "@/lib/utils/lrc-parser";
 
 interface LyricLine {
-  timestamp: number;
-  text: string;
+  timeMs: number;
+  line: string;
 }
 
 const BG_COLORS = [
@@ -25,7 +25,7 @@ export interface Song {
   artist: string;
   audioUrl: string;
   lyricsUrl?: string;
-  lyrics?: Array<{ timestamp: number; text: string }>;
+  lyrics?: Array<{ timeMs: number; line: string }>;
 }
 
 interface PlayerProps {
@@ -33,7 +33,7 @@ interface PlayerProps {
   onSongEnd?: () => void;
   onNextSong?: () => void;
   onPreviousSong?: () => void;
-  lyrics?: Array<{ timestamp: number; text: string }>;
+  lyrics?: Array<{ timeMs: number; line: string }>;
   compact?: boolean;
 }
 
@@ -132,7 +132,8 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
   useEffect(() => {
     let idx = -1;
     for (let i = lyrics.length - 1; i >= 0; i--) {
-      if (lyrics[i].timestamp <= currentTime) {
+      const lineTimestamp = lyrics[i].timeMs / 1000; // Convert ms to seconds
+      if (lineTimestamp <= currentTime) {
         idx = i;
         break;
       }
@@ -551,10 +552,10 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
               }`}
               onClick={() => {
                 if (audioRef.current)
-                  audioRef.current.currentTime = line.timestamp;
+                  audioRef.current.currentTime = line.timeMs / 1000; // Convert ms to seconds
               }}
             >
-              {line.text}
+              {line.line}
             </div>
           ))}
         </div>

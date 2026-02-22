@@ -44,12 +44,12 @@ function formatDuration(sec: number) {
 
 // Convert DB Song → Player Song format (with lyrics!)
 function toPlayerSong(song: Song): PlayerSong {
-  // Convert lrc_data {timeMs, line} → player lyrics {timestamp, text}
+  // lrc_data is already in correct format {timeMs, line}
   const lyrics =
     song.lrc_data && Array.isArray(song.lrc_data)
       ? song.lrc_data.map((l) => ({
-        timestamp: l.timeMs / 1000,
-        text: l.line,
+        timeMs: l.timeMs,
+        line: l.line,
       }))
       : undefined;
 
