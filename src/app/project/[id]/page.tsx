@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { themeOptions, toneOptions, audienceOptions } from "@/lib/schemas/parody";
 import type { GenerateParodyResponse } from "@/lib/schemas/parody";
+import Player from "@/components/player";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -24,6 +25,9 @@ export default function ProjectPage() {
   const [result, setResult] = useState<GenerateParodyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [song, setSong] = useState<{ title: string; artist: string; lyrics_raw: string } | null>(null);
+  const [sungResult, setSungResult] = useState<{ mp3Url: string; parodyLrcLines: Array<{ timestamp: number; text: string }> } | null>(null);
+  const [sungLoading, setSungLoading] = useState(false);
+  const [sungError, setSungError] = useState<string | null>(null);
 
   // Fetch song details
   useEffect(() => {
@@ -36,6 +40,30 @@ export default function ProjectPage() {
   }, [songId]);
 
   const canGenerate = theme && tone && audience && song;
+
+  async function handleSingIt() {
+    if (!result || !songId) return;
+    setSungLoading(true);
+    setSungError(null);
+    try {
+      const res = await fetch("/api/generate-sung-parody", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          songId,
+          parodyLrcLines: result.parodyLrcLines,
+          instrumentalUrl: "/demo/instrumentals/i-wonder-instrumental.mp3",
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setSungResult(data);
+    } catch {
+      setSungError("Voice generation failed — try again");
+    } finally {
+      setSungLoading(false);
+    }
+  }
 
   async function handleGenerate() {
     if (!canGenerate || !songId || !song) return;
@@ -148,7 +176,7 @@ export default function ProjectPage() {
             <Card>
               <CardHeader><CardTitle>Parody</CardTitle></CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap text-sm">{result.parodyLyrics}</pre>
+                <pre className="whitespace-pre-wrap text-sm">{result.parodyLrcLines.map((l) => l.text).join("\n")}</pre>
               </CardContent>
             </Card>
           </div>
@@ -171,11 +199,17 @@ export default function ProjectPage() {
           </Card>
 
           <div className="flex gap-2">
-            {/* TODO: Start Karaoke button → navigate to karaoke player */}
             <Button variant="outline" onClick={() => setResult(null)}>Regenerate</Button>
-            {/* TODO: Play AI Narration button */}
-            {/* TODO: Start Party button */}
+            <Button onClick={handleSingIt} disabled={sungLoading}>
+              {sungLoading ? "Generating Vocals..." : "Sing It!"}
+            </Button>
           </div>
+
+          {sungError && <p className="text-destructive text-sm">{sungError}</p>}
+
+          {sungResult && (
+            <Player audioUrl={sungResult.mp3Url} lyrics={sungResult.parodyLrcLines} />
+          )}
         </div>
       )}
     </main>

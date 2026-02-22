@@ -20,7 +20,12 @@ const BG_COLORS = [
 const getRandomColor = () =>
   BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
 
-export default function Player() {
+interface PlayerProps {
+  audioUrl?: string;
+  lyrics?: Array<{ timestamp: number; text: string }>;
+}
+
+export default function Player({ audioUrl, lyrics: propLyrics }: PlayerProps = {}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -36,13 +41,22 @@ export default function Player() {
 
   useEffect(() => {
     let cancelled = false;
+
+    if (propLyrics && propLyrics.length > 0) {
+      setLyrics(propLyrics);
+      if (audioRef.current) audioRef.current.src = audioUrl || "/demo/songs/i-wonder.mp3";
+      setBgColor(getRandomColor());
+      setIsLoading(false);
+      return;
+    }
+
     const init = async () => {
       try {
         const lrcContent = await fetch("/demo/lrcs/i-wonder.txt").then((r) =>
           r.text(),
         );
         if (cancelled) return;
-        if (audioRef.current) audioRef.current.src = "/demo/songs/i-wonder.mp3";
+        if (audioRef.current) audioRef.current.src = audioUrl || "/demo/songs/i-wonder.mp3";
         setLyrics(parseLrcContent(lrcContent));
         setBgColor(getRandomColor());
       } finally {
@@ -53,7 +67,7 @@ export default function Player() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [audioUrl, propLyrics]);
 
   useEffect(() => {
     const audio = audioRef.current;
