@@ -25,7 +25,7 @@ export default async function KidsSongDetailPage({ params }: PageProps) {
     .from("songs")
     .select("*")
     .eq("id", songId)
-    .eq("child_safe", true)
+    .eq("is_child_safe", true)
     .single();
 
   if (!song) notFound();

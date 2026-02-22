@@ -72,7 +72,7 @@ export default async function KidsCategoryPage({ params }: PageProps) {
     const { data } = await supabase
       .from("songs")
       .select("*")
-      .eq("child_safe", true) // ← only child-safe songs
+      .eq("is_child_safe", true) // ← only child-safe songs
       .or(orFilter)
       .order("title");
     songs = (data as Song[]) ?? [];
@@ -80,7 +80,7 @@ export default async function KidsCategoryPage({ params }: PageProps) {
     const { data } = await supabase
       .from("songs")
       .select("*")
-      .eq("child_safe", true) // ← only child-safe songs
+      .eq("is_child_safe", true) // ← only child-safe songs
       .order("title");
     songs = (data as Song[]) ?? [];
   }

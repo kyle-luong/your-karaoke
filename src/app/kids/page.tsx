@@ -62,7 +62,7 @@ export default async function KidsPage() {
   const { data: songs } = await supabase
     .from("songs")
     .select("*")
-    .eq("child_safe", true)
+    .eq("is_child_safe", true)
     .order("title");
 
   // Fetch parody remixes (same as main page)
@@ -147,7 +147,7 @@ export default async function KidsPage() {
       <ScrollSection title="Popular" href="/songs/karaoke">
         {typedSongs.length === 0 ? (
           <div className="shrink-0 w-full py-16 text-center text-muted-foreground">
-            No kid-safe songs yet — mark songs as child_safe in the database!
+            No kid-safe songs yet — mark songs as is_child_safe in the database!
           </div>
         ) : (
           typedSongs.map((song, i) => (

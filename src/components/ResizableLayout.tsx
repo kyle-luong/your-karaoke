@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import {
   Mic2,
   Music,
@@ -16,31 +16,41 @@ import {
   Users,
   Sparkles,
   ShieldCheck,
-} from 'lucide-react';
-import QueuedPlayer from '@/components/QueuedPlayer';
-import type { Song } from '@/lib/types/database';
-import type { Song as PlayerSong } from '@/components/player';
+} from "lucide-react";
+import QueuedPlayer from "@/components/QueuedPlayer";
+import type { Song } from "@/lib/types/database";
+import type { Song as PlayerSong } from "@/components/player";
 
 const GENRES = [
-  { name: 'All', icon: Music, color: 'text-primary' },
-  { name: 'Rap', icon: Mic2, color: 'text-blue-500', match: ['Hip-Hop', 'Rap'] },
-  { name: 'Pop', icon: Music, color: 'text-pink-500', match: ['Pop'] },
-  { name: 'Country', icon: Guitar, color: 'text-orange-500', match: ['Country'] },
-  { name: 'Rock', icon: Zap, color: 'text-yellow-500', match: ['Rock'] },
-  { name: 'R&B', icon: Heart, color: 'text-red-500', match: ['R&B'] },
+  { name: "All", icon: Music, color: "text-primary" },
+  {
+    name: "Rap",
+    icon: Mic2,
+    color: "text-blue-500",
+    match: ["Hip-Hop", "Rap"],
+  },
+  { name: "Pop", icon: Music, color: "text-pink-500", match: ["Pop"] },
+  {
+    name: "Country",
+    icon: Guitar,
+    color: "text-orange-500",
+    match: ["Country"],
+  },
+  { name: "Rock", icon: Zap, color: "text-yellow-500", match: ["Rock"] },
+  { name: "R&B", icon: Heart, color: "text-red-500", match: ["R&B"] },
 ];
 
 const GRADIENTS = [
-  'from-pink-600 to-purple-900',
-  'from-blue-600 to-indigo-900',
-  'from-emerald-600 to-teal-900',
-  'from-orange-500 to-red-800',
-  'from-violet-600 to-fuchsia-900',
-  'from-cyan-500 to-blue-800',
+  "from-pink-600 to-purple-900",
+  "from-blue-600 to-indigo-900",
+  "from-emerald-600 to-teal-900",
+  "from-orange-500 to-red-800",
+  "from-violet-600 to-fuchsia-900",
+  "from-cyan-500 to-blue-800",
 ];
 
 function formatDuration(sec: number) {
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }
 
 // Convert DB Song → Player Song format (with lyrics!)
@@ -49,9 +59,9 @@ function toPlayerSong(song: Song): PlayerSong {
   const lyrics =
     song.lrc_data && Array.isArray(song.lrc_data)
       ? song.lrc_data.map((l) => ({
-        timeMs: l.timeMs,
-        line: l.line,
-      }))
+          timeMs: l.timeMs,
+          line: l.line,
+        }))
       : undefined;
 
   return {
@@ -68,15 +78,18 @@ interface ResizableLayoutProps {
   remixCounts?: Record<string, number>;
 }
 
-export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLayoutProps) {
+export default function ResizableLayout({
+  songs,
+  remixCounts = {},
+}: ResizableLayoutProps) {
   const searchParams = useSearchParams();
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Filter state
-  const [activeGenre, setActiveGenre] = useState('All');
-  const [search, setSearch] = useState('');
+  const [activeGenre, setActiveGenre] = useState("All");
+  const [search, setSearch] = useState("");
 
   // Queue state
   const [queue, setQueue] = useState<PlayerSong[]>([]);
@@ -86,7 +99,7 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
   // On mount: auto-play song from ?play= query param
   useEffect(() => {
     if (initialised) return;
-    const playId = searchParams.get('play');
+    const playId = searchParams.get("play");
     if (playId) {
       const song = songs.find((s) => s.id === playId);
       if (song) {
@@ -114,12 +127,12 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
     };
     const up = () => setIsResizing(false);
     if (isResizing) {
-      document.addEventListener('mousemove', move);
-      document.addEventListener('mouseup', up);
+      document.addEventListener("mousemove", move);
+      document.addEventListener("mouseup", up);
     }
     return () => {
-      document.removeEventListener('mousemove', move);
-      document.removeEventListener('mouseup', up);
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
     };
   }, [isResizing]);
 
@@ -138,18 +151,23 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
 
   // Filter songs
   const filtered = songs.filter((s) => {
-    if (activeGenre !== 'All') {
+    if (activeGenre !== "All") {
       const genre = GENRES.find((g) => g.name === activeGenre);
-      if (genre && 'match' in genre) {
+      if (genre && "match" in genre) {
         const matches = (genre as { match: string[] }).match;
-        if (!matches.some((m) => s.genre?.toLowerCase().includes(m.toLowerCase()))) {
+        if (
+          !matches.some((m) => s.genre?.toLowerCase().includes(m.toLowerCase()))
+        ) {
           return false;
         }
       }
     }
     if (search.trim()) {
       const q = search.toLowerCase();
-      if (!s.title.toLowerCase().includes(q) && !s.artist.toLowerCase().includes(q)) {
+      if (
+        !s.title.toLowerCase().includes(q) &&
+        !s.artist.toLowerCase().includes(q)
+      ) {
         return false;
       }
     }
@@ -192,10 +210,11 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
               <button
                 key={g.name}
                 onClick={() => setActiveGenre(g.name)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${activeGenre === g.name
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted hover:bg-accent text-muted-foreground'
-                  }`}
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${
+                  activeGenre === g.name
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-accent text-muted-foreground"
+                }`}
               >
                 <g.icon className="size-3.5" />
                 {g.name}
@@ -218,7 +237,7 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
           {/* Song count */}
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground font-medium">
-              {filtered.length} {filtered.length === 1 ? 'song' : 'songs'}
+              {filtered.length} {filtered.length === 1 ? "song" : "songs"}
             </p>
           </div>
 
@@ -232,7 +251,8 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {filtered.map((song, i) => {
-                const isPlaying = queue.length > 0 && queue[currentIndex]?.id === song.id;
+                const isPlaying =
+                  queue.length > 0 && queue[currentIndex]?.id === song.id;
                 const remixCount = remixCounts[song.id] ?? 0;
 
                 return (
@@ -270,15 +290,11 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
                         )}
 
                         {/* Content rating */}
-                        {!isPlaying && (
+                        {!isPlaying && song.is_child_safe && (
                           <div className="absolute top-1.5 left-1.5">
-                            {song.is_explicit ? (
-                              <Badge className="bg-red-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5">E</Badge>
-                            ) : (
-                              <Badge className="bg-emerald-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5 flex items-center gap-0.5">
-                                <ShieldCheck className="size-2.5" /> Safe
-                              </Badge>
-                            )}
+                            <Badge className="bg-emerald-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5 flex items-center gap-0.5">
+                              <ShieldCheck className="size-2.5" /> Safe
+                            </Badge>
                           </div>
                         )}
 
@@ -293,7 +309,10 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
 
                     {/* Info + add to queue */}
                     <div className="flex items-start justify-between gap-1">
-                      <Link href={`/songs/${song.id}`} className="min-w-0 flex-1">
+                      <Link
+                        href={`/songs/${song.id}`}
+                        className="min-w-0 flex-1"
+                      >
                         <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
                           {song.title}
                         </p>
@@ -315,7 +334,7 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
                       <div className="flex items-center gap-1 mt-1">
                         <Sparkles className="size-3 text-primary" />
                         <span className="text-[10px] text-muted-foreground font-medium">
-                          {remixCount} {remixCount === 1 ? 'remix' : 'remixes'}
+                          {remixCount} {remixCount === 1 ? "remix" : "remixes"}
                         </span>
                       </div>
                     )}
@@ -330,8 +349,9 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
       {/* ───── Draggable Divider ───── */}
       <div
         onMouseDown={handleMouseDown}
-        className={`w-1 hover:bg-primary/50 cursor-col-resize transition-colors ${isResizing ? 'bg-primary/50' : 'bg-border'
-          }`}
+        className={`w-1 hover:bg-primary/50 cursor-col-resize transition-colors ${
+          isResizing ? "bg-primary/50" : "bg-border"
+        }`}
       />
 
       {/* ───── Right Sidebar (Player + Queue) ───── */}
@@ -339,10 +359,7 @@ export default function ResizableLayout({ songs, remixCounts = {} }: ResizableLa
         className="border-l bg-card overflow-hidden flex flex-col"
         style={{ width: `${sidebarWidth}px` }}
       >
-        <QueuedPlayer
-          initialQueue={queue}
-          compact={true}
-        />
+        <QueuedPlayer initialQueue={queue} compact={true} />
       </aside>
     </div>
   );

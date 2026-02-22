@@ -2,14 +2,37 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { HomeActions } from "@/components/shared/home-actions";
-import { Mic2, Music, Guitar, Zap, Heart, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  Mic2,
+  Music,
+  Guitar,
+  Zap,
+  Heart,
+  Sparkles,
+  ShieldCheck,
+} from "lucide-react";
 import type { Song, Version } from "@/lib/types/database";
 
 const CATEGORIES = [
   { name: "Rap", icon: Mic2, color: "text-blue-500", route: "/categories/rap" },
-  { name: "Pop", icon: Music, color: "text-pink-500", route: "/categories/pop" },
-  { name: "Country", icon: Guitar, color: "text-orange-500", route: "/categories/country" },
-  { name: "Rock", icon: Zap, color: "text-yellow-500", route: "/categories/rock" },
+  {
+    name: "Pop",
+    icon: Music,
+    color: "text-pink-500",
+    route: "/categories/pop",
+  },
+  {
+    name: "Country",
+    icon: Guitar,
+    color: "text-orange-500",
+    route: "/categories/country",
+  },
+  {
+    name: "Rock",
+    icon: Zap,
+    color: "text-yellow-500",
+    route: "/categories/rock",
+  },
   { name: "R&B", icon: Heart, color: "text-red-500", route: "/categories/rnb" },
 ];
 
@@ -55,7 +78,9 @@ export default async function LibraryPage() {
   ((songs as Song[]) ?? []).forEach((s) => songMap.set(s.id, s));
 
   if (versions) {
-    for (const v of versions as (Version & { projects: { song_id: string } })[]) {
+    for (const v of versions as (Version & {
+      projects: { song_id: string };
+    })[]) {
       const songId = v.projects.song_id;
       const song = songMap.get(songId);
       if (song) {
@@ -105,8 +130,12 @@ export default async function LibraryPage() {
         {CATEGORIES.map((cat) => (
           <Link href={cat.route} key={cat.name} className="shrink-0">
             <div className="w-40 h-40 rounded-xl flex flex-col items-center justify-center gap-3 bg-card border border-border/40 hover:-translate-y-1 hover:shadow-sm transition-all cursor-pointer group">
-              <cat.icon className={`size-9 ${cat.color} group-hover:scale-110 transition-transform`} />
-              <span className="font-bold text-xs uppercase tracking-widest">{cat.name}</span>
+              <cat.icon
+                className={`size-9 ${cat.color} group-hover:scale-110 transition-transform`}
+              />
+              <span className="font-bold text-xs uppercase tracking-widest">
+                {cat.name}
+              </span>
             </div>
           </Link>
         ))}
@@ -121,7 +150,10 @@ export default async function LibraryPage() {
         ) : (
           typedSongs.map((song, i) => (
             <Link href={`/songs/${song.id}`} key={song.id} className="shrink-0">
-              <SongCard song={song} gradient={GRADIENTS[i % GRADIENTS.length]} />
+              <SongCard
+                song={song}
+                gradient={GRADIENTS[i % GRADIENTS.length]}
+              />
             </Link>
           ))
         )}
@@ -164,13 +196,19 @@ function ScrollSection({
       <div className="max-w-6xl mx-auto px-6 lg:px-10 flex justify-between items-end">
         <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
         {href && (
-          <Link href={href} className="text-sm font-bold text-primary hover:underline">
+          <Link
+            href={href}
+            className="text-sm font-bold text-primary hover:underline"
+          >
             Show all
           </Link>
         )}
       </div>
       <div className="max-w-6xl mx-auto overflow-x-auto scrollbar-hide scroll-fade">
-        <div className="flex gap-5 px-6 lg:px-10 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+        <div
+          className="flex gap-5 px-6 lg:px-10 pb-2"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
           {children}
         </div>
       </div>
@@ -181,7 +219,10 @@ function ScrollSection({
 /* ── Song card (standardized size) ── */
 function SongCard({ song, gradient }: { song: Song; gradient: string }) {
   return (
-    <div className="w-44 group cursor-pointer" style={{ scrollSnapAlign: "start" }}>
+    <div
+      className="w-44 group cursor-pointer"
+      style={{ scrollSnapAlign: "start" }}
+    >
       <div className="w-44 h-44 rounded-xl overflow-hidden shadow-sm mb-3 relative">
         {song.thumbnail_url ? (
           <img
@@ -190,7 +231,9 @@ function SongCard({ song, gradient }: { song: Song; gradient: string }) {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+          <div
+            className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}
+          >
             <Music className="size-10 text-white/30" />
           </div>
         )}
@@ -200,15 +243,13 @@ function SongCard({ song, gradient }: { song: Song; gradient: string }) {
           </Badge>
         </div>
         {/* Content rating */}
-        <div className="absolute top-1.5 left-1.5">
-          {song.is_explicit ? (
-            <Badge className="bg-red-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5">E</Badge>
-          ) : (
+        {song.is_child_safe && (
+          <div className="absolute top-1.5 left-1.5">
             <Badge className="bg-emerald-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5 flex items-center gap-0.5">
               <ShieldCheck className="size-2.5" /> Safe
             </Badge>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
         {song.title}
@@ -221,7 +262,10 @@ function SongCard({ song, gradient }: { song: Song; gradient: string }) {
 /* ── Remix card (standardized size, same as SongCard) ── */
 function RemixCard({ song, version }: { song: Song; version: Version }) {
   return (
-    <div className="w-44 group cursor-pointer" style={{ scrollSnapAlign: "start" }}>
+    <div
+      className="w-44 group cursor-pointer"
+      style={{ scrollSnapAlign: "start" }}
+    >
       <div className="w-44 h-44 rounded-xl overflow-hidden shadow-md mb-3 relative">
         {song.thumbnail_url ? (
           <img
@@ -244,7 +288,9 @@ function RemixCard({ song, version }: { song: Song; version: Version }) {
       <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
         {song.title}
       </p>
-      <p className="text-xs text-muted-foreground truncate">Parody · {song.artist}</p>
+      <p className="text-xs text-muted-foreground truncate">
+        Parody · {song.artist}
+      </p>
     </div>
   );
 }

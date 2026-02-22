@@ -15,7 +15,7 @@ export default async function KidsKaraokePage() {
   const { data } = await supabase
     .from("songs")
     .select("*")
-    .eq("child_safe", true)
+    .eq("is_child_safe", true)
     .order("title");
   const songs: Song[] = (data as Song[]) ?? [];
 
