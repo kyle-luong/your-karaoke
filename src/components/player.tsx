@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import parseLrcContent from "@/lib/utils/lrc-parser";
+import parseTitle from "@/lib/utils/song-title-parser";
 
 interface LyricLine {
   timeMs: number;
@@ -47,12 +48,15 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
   const [activeIndex, setActiveIndex] = useState(-1);
   const [bgColor, setBgColor] = useState<string>('#6B1B47');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isKaraokeMode, setIsKaraokeMode] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     let cancelled = false;
+
+    setIsKaraokeMode(false);
 
     if (propLyrics && propLyrics.length > 0) {
       setLyrics(propLyrics);
@@ -132,7 +136,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
   useEffect(() => {
     let idx = -1;
     for (let i = lyrics.length - 1; i >= 0; i--) {
-      const lineTimestamp = lyrics[i].timeMs / 1000; // Convert ms to seconds
+      const lineTimestamp = lyrics[i].timeMs / 1000;
       if (lineTimestamp <= currentTime) {
         idx = i;
         break;
@@ -169,9 +173,46 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
     }
   };
 
-  const skip = (seconds: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(0, Math.min(duration, audioRef.current.currentTime + seconds));
+  const toggleKaraoke = () => {
+    const audio = audioRef.current;
+    if (!audio || !song) return;
+    const nextKaraoke = !isKaraokeMode;
+    setIsKaraokeMode(nextKaraoke);
+
+    const prevTime = audio.currentTime || 0;
+    // Pause now and mark as not playing
+    audio.pause();
+    setIsPlaying(false);
+
+    const onLoaded = () => {
+      try {
+        if (isFinite(prevTime) && prevTime >= 0 && prevTime <= (audio.duration || Infinity)) {
+          audio.currentTime = prevTime;
+        }
+      } catch (err) {
+        // ignore seeking errors
+      }
+      audio.pause();
+      setIsPlaying(false);
+      audio.removeEventListener('loadedmetadata', onLoaded);
+    };
+
+    audio.addEventListener('loadedmetadata', onLoaded);
+
+    if (nextKaraoke) {
+      const title = parseTitle(song.title);
+      const instrumentalUrl = `/demo/instrumentals/${title}-instrumental.mp3`;
+      audio.src = instrumentalUrl;
+    } else {
+      audio.src = song.audioUrl;
+    }
+
+    // If metadata is already available for the newly assigned src, apply time immediately
+    if (audio.readyState >= 1) {
+      onLoaded();
+    } else {
+      // ensure the browser starts loading metadata
+      try { audio.load(); } catch (e) {}
     }
   };
 
@@ -240,7 +281,6 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       border-width: 4px;
     }
 
-    /* Fullscreen wrapper — only rendered in non-compact mode */
     .player-wrap {
       width: 100%;
       height: 100%;
@@ -256,7 +296,6 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       height: 100vh;
     }
 
-    /* Lyrics */
     .player-lyrics {
       flex: 1;
       overflow-y: scroll;
@@ -328,7 +367,6 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       font-size: 40px;
     }
 
-    /* Loading */
     .player-loading {
       flex: 1;
       display: flex;
@@ -344,7 +382,6 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       font-size: 36px;
     }
 
-    /* Controls */
     .player-controls {
       padding: 12px 14px 14px;
       border-top: 1px solid rgba(255, 255, 255, 0.15);
@@ -425,7 +462,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 56px; /* leave room on the right for the fullscreen button */
+      padding: 0 56px;
     }
 
     .player-card.fullscreen .player-btn-row {
@@ -439,10 +476,29 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       justify-content: center;
     }
 
+    .player-karaoke-btn {
+      position: absolute;
+      left: 12px;
+    }
+
+    .player-karaoke-btn.active {
+      border-color: #ff006e !important;
+      background: linear-gradient(135deg, rgba(255, 0, 110, 0.5) 0%, rgba(255, 100, 150, 0.4) 100%) !important;
+      color: #fff !important;
+      box-shadow: 0 0 10px rgba(255, 0, 110, 0.45);
+    }
+
+    .player-card.fullscreen .player-karaoke-btn {
+      left: 40px;
+    }
+
     .player-fullscreen-btn {
       position: absolute;
       right: 12px;
-      transform: translateY(0%);
+    }
+
+    .player-card.fullscreen .player-fullscreen-btn {
+      right: 40px;
     }
 
     .player-control-btn {
@@ -551,7 +607,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
               }`}
               onClick={() => {
                 if (audioRef.current)
-                  audioRef.current.currentTime = line.timeMs / 1000; // Convert ms to seconds
+                  audioRef.current.currentTime = line.timeMs / 1000;
               }}
             >
               {line.line}
@@ -577,6 +633,15 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
           <span className="player-time">{fmt(duration)}</span>
         </div>
         <div className="player-btn-row">
+          <button
+            className={`player-control-btn player-karaoke-btn${isKaraokeMode ? ' active' : ''}`}
+            onClick={toggleKaraoke}
+            title={isKaraokeMode ? "Switch to original" : "Switch to instrumental"}
+            disabled={!song}
+          >
+            🎤
+          </button>
+
           <div className="player-center-controls">
             <button className="player-control-btn" onClick={onPreviousSong} title="Previous song" disabled={!onPreviousSong}>⏮</button>
             <button className="player-play-btn" onClick={togglePlay}>
@@ -584,6 +649,7 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
             </button>
             <button className="player-control-btn" onClick={onNextSong} title="Next song" disabled={!onNextSong}>⏭</button>
           </div>
+
           <button className="player-control-btn player-fullscreen-btn" onClick={toggleFullscreen} title="Fullscreen">⛶</button>
         </div>
       </div>
@@ -596,10 +662,8 @@ export default function Player({ song, onSongEnd, onNextSong, onPreviousSong, ly
       <audio ref={audioRef} crossOrigin="anonymous" autoPlay/>
 
       {compact ? (
-        // In compact mode, render the card directly — no wrapper shell
         cardContent
       ) : (
-        // In standalone mode, wrap with the full-page centering shell
         <div className={`player-wrap ${isFullscreen ? 'fullscreen' : ''}`}>
           {cardContent}
         </div>

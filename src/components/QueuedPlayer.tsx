@@ -19,6 +19,7 @@ export default function QueuedPlayer({
   const [playerHeight, setPlayerHeight] = useState(65); // percentage
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  
 
   // Sync queue from parent when initialQueue changes
   useEffect(() => {
@@ -45,6 +46,8 @@ export default function QueuedPlayer({
       setCurrentIndex(0);
     }
   }, [initialQueue]);
+
+  
 
   const currentSong = queue[currentIndex];
 
