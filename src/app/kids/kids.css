@@ -1,0 +1,114 @@
+/* ─── Kids Theme ─── */
+
+/* Override design tokens for a bright, playful palette */
+.kids-theme {
+    --background: oklch(0.97 0.01 250);
+    --foreground: oklch(0.25 0.05 280);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.25 0.05 280);
+    --primary: oklch(0.65 0.28 310);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.92 0.04 200);
+    --secondary-foreground: oklch(0.3 0.05 280);
+    --muted: oklch(0.94 0.02 250);
+    --muted-foreground: oklch(0.5 0.03 280);
+    --accent: oklch(0.85 0.12 80);
+    --accent-foreground: oklch(0.25 0.05 280);
+    --border: oklch(0.9 0.03 250);
+}
+
+/* Playful rainbow gradient navbar */
+.kids-navbar {
+    background: linear-gradient(135deg, #ff6b9d 0%, #c44dff 25%, #6e8efb 50%, #48dbfb 75%, #00d2d3 100%);
+}
+
+/* Bubbly card hover */
+.kids-card {
+    border-radius: 1.25rem;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.kids-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(196, 77, 255, 0.18), 0 4px 12px rgba(110, 142, 251, 0.12);
+}
+
+/* Subtle bounce entrance */
+@keyframes kids-bounce-in {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.kids-bounce {
+    animation: kids-bounce-in 0.5s ease-out both;
+}
+
+/* Sparkle float */
+@keyframes sparkle-float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-6px) rotate(12deg);
+    }
+}
+
+.sparkle-float {
+    animation: sparkle-float 3s ease-in-out infinite;
+}
+
+/* Stagger entrance for grid items */
+.kids-grid>*:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.kids-grid>*:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.kids-grid>*:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.kids-grid>*:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.kids-grid>*:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.kids-grid>*:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.kids-grid>*:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.kids-grid>*:nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+.kids-grid>*:nth-child(9) {
+    animation-delay: 0.45s;
+}
+
+.kids-grid>*:nth-child(10) {
+    animation-delay: 0.5s;
+}
