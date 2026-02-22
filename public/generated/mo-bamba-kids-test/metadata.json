@@ -1,0 +1,47 @@
+{
+  "parodyLrcLines": [
+    {
+      "timestamp": 2.14,
+      "text": "(Quack-y-duck)"
+    },
+    {
+      "timestamp": 4.9,
+      "text": "Quack"
+    },
+    {
+      "timestamp": 5.97,
+      "text": "(Ducklings took to the pond)"
+    },
+    {
+      "timestamp": 6.28,
+      "text": "I got friends"
+    },
+    {
+      "timestamp": 9.98,
+      "text": "Callin', a sweet duckling's home (chirp, chirp)"
+    },
+    {
+      "timestamp": 16.11,
+      "text": "Where's Pat with the yummy ducky treat? (quack, quack)"
+    },
+    {
+      "timestamp": 22.73,
+      "text": "I be swimmin' like a silly ducky float (Like a, huh, like a, huh)"
+    },
+    {
+      "timestamp": 29.18,
+      "text": "I be waddlin' like my ducky bro (Waddle, quack)"
+    }
+  ],
+  "summaryNarration": "The original lyrics were transformed into a wholesome, silly duck-themed parody. Each line was carefully rewritten to maintain the exact syllable count, ensuring a perfect fit for the original timing while being completely kid-friendly.",
+  "transformationReport": {
+    "changesCount": 8,
+    "mainTheme": "funny ducks",
+    "toneUsed": "silly",
+    "highlights": [
+      "Strict adherence to syllable count for each line.",
+      "Complete removal of profanity and adult themes, replaced with wholesome, duck-themed content."
+    ]
+  },
+  "generatedAt": "2024-07-29T12:00:00Z"
+}

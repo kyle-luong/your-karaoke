@@ -17,8 +17,25 @@ import {
   Users,
   Sparkles,
   ShieldCheck,
+  Copy,
+  Check,
+  Loader2,
 } from "lucide-react";
 import QueuedPlayer from "@/components/QueuedPlayer";
+import { toast } from "sonner";
+
+import {
+  LiveKitRoom,
+  VideoTrack,
+  useTracks,
+  isTrackReference,
+  ControlBar,
+  RoomAudioRenderer,
+  LayoutContextProvider,
+} from "@livekit/components-react";
+import { Track } from "livekit-client";
+import "@livekit/components-styles";
+
 import type { Song, Version, Report } from "@/lib/types/database";
 import type { Song as PlayerSong } from "@/components/player";
 
@@ -55,9 +72,79 @@ function formatDuration(sec: number) {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }
 
+/* ─── LiveKit Video Components ─── */
+
+function StageVideo() {
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+    ],
+    { onlySubscribed: false },
+  );
+
+  return (
+    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-1.5 bg-black overflow-hidden">
+      {tracks.map((track) => (
+        <div
+          key={`${track.participant.identity}-${track.source}`}
+          className="relative rounded-lg overflow-hidden bg-muted/10 border border-white/5 flex items-center justify-center min-h-[120px]"
+        >
+          {isTrackReference(track) &&
+          (track.publication?.isSubscribed || track.participant.isLocal) ? (
+            <VideoTrack
+              trackRef={track}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="size-4 text-primary animate-spin" />
+              <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">
+                Connecting...
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VideoStage({ token }: { token: string }) {
+  return (
+    <LiveKitRoom
+      token={token}
+      serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+      connect={true}
+      audio={true}
+      video={true}
+      data-lk-theme="default"
+      className="h-full flex flex-col"
+    >
+      <LayoutContextProvider>
+        <RoomAudioRenderer />
+        <StageVideo />
+        <div className="border-t bg-background/80 backdrop-blur-md p-1">
+          <ControlBar
+            variation="minimal"
+            controls={{
+              microphone: true,
+              camera: true,
+              screenShare: false,
+              chat: false,
+              settings: true,
+            }}
+          />
+        </div>
+      </LayoutContextProvider>
+    </LiveKitRoom>
+  );
+}
+
+/* ─── Song Helpers ─── */
+
 // Convert DB Song → Player Song format (with lyrics!)
 function toPlayerSong(song: Song): PlayerSong {
-  // lrc_data is already in correct format {timeMs, line}
   const lyrics =
     song.lrc_data && Array.isArray(song.lrc_data)
       ? song.lrc_data.map((l) => ({
@@ -99,11 +186,7 @@ function toRemixPlayerSong(item: RemixItem): PlayerSong {
   };
 }
 
-interface ResizableLayoutProps {
-  songs: Song[];
-  remixCounts?: Record<string, number>;
-  remixItems?: RemixItem[];
-}
+/* ─── Types ─── */
 
 type RemixItem = {
   version: Version;
@@ -112,26 +195,98 @@ type RemixItem = {
   theme: string;
 };
 
+interface ResizableLayoutProps {
+  songs: Song[];
+  remixCounts?: Record<string, number>;
+  remixItems?: RemixItem[];
+  initialLobbyId?: string;
+  isGuest?: boolean;
+}
+
+/* ─── Main Component ─── */
+
 export default function ResizableLayout({
   songs,
   remixCounts = {},
   remixItems = [],
+  initialLobbyId,
+  isGuest,
 }: ResizableLayoutProps) {
   const searchParams = useSearchParams();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Filter state
   const [activeGenre, setActiveGenre] = useState("All");
   const [search, setSearch] = useState("");
+
+  // Lobby state
+  const [lobbyActive, setLobbyActive] = useState(false);
+  const [lobbyId, setLobbyId] = useState<string | null>(
+    initialLobbyId || null,
+  );
+  const [token, setToken] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Queue state
   const [queue, setQueue] = useState<PlayerSong[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [initialised, setInitialised] = useState(false);
 
-  // On mount: auto-play song from ?play= query param
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (initialLobbyId) setLobbyActive(true);
+  }, [initialLobbyId]);
+
+  // LiveKit token fetch
+  useEffect(() => {
+    if (lobbyActive && lobbyId && !token) {
+      const fetchToken = async () => {
+        try {
+          const participantName = isGuest
+            ? `Guest-${Math.floor(Math.random() * 1000)}`
+            : `Host-${Math.floor(Math.random() * 1000)}`;
+          const resp = await fetch(
+            `/api/get-participant-token?room=${lobbyId}&username=${participantName}`,
+            {
+              method: "GET",
+              headers: { "ngrok-skip-browser-warning": "true" },
+            },
+          );
+          const data = await resp.json();
+          setToken(data.token);
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      fetchToken();
+    }
+  }, [lobbyActive, lobbyId, token, isGuest]);
+
+  const confirmLobby = () => {
+    const id = Math.random().toString(36).substring(7);
+    setLobbyId(id);
+    setLobbyActive(true);
+    setShowConfirm(false);
+  };
+
+  const copyInvite = () => {
+    if (lobbyId) {
+      const inviteLink = `${window.location.origin}/party/${lobbyId}`;
+      navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Link Copied!");
+    }
+  };
+
+  // Auto-play from URL params
   useEffect(() => {
     if (initialised) return;
     const playId = searchParams.get("play");
@@ -147,7 +302,6 @@ export default function ResizableLayout({
       if (versionId) {
         try {
           const supabase = createClient();
-          // Fetch version and its report
           const { data: version } = await supabase
             .from("versions")
             .select("*, reports(*)")
@@ -157,11 +311,7 @@ export default function ResizableLayout({
           const { data: song } = await supabase
             .from("songs")
             .select("*")
-            .eq("id", playId) // playId is the project_id? Wait, look at SongHero link.
-            // SongHero uses searchParams.get('play') as song.id.
-            // But VersionModal uses searchParams.get('play') as version.project_id.
-            // I should standardized 'play' to always be song_id, or handle both.
-            // Let's assume 'play' is the song_id.
+            .eq("id", playId)
             .single();
 
           if (version && song) {
@@ -171,7 +321,6 @@ export default function ResizableLayout({
               id: song.id,
               title: song.title,
               artist: song.artist,
-              // For remixes: use AI vocals if available, otherwise always use instrumental
               audioUrl: report?.narration_audio_url || instrumentalUrl,
               lyrics: (version.lrc_data as any[]).map((l) => ({
                 timeMs: l.timeMs,
@@ -197,15 +346,7 @@ export default function ResizableLayout({
     initPlay();
   }, [searchParams, songs, initialised]);
 
-  // On mount, expand sidebar
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const w = containerRef.current.getBoundingClientRect().width;
-    setSidebarWidth(Math.min(400, Math.floor(w * 0.35)));
-  }, []);
-
-  // Resize handlers
-  const handleMouseDown = () => setIsResizing(true);
+  // Resize handler
   useEffect(() => {
     const move = (e: MouseEvent) => {
       if (!isResizing || !containerRef.current) return;
@@ -237,7 +378,6 @@ export default function ResizableLayout({
   // Add song to end of queue
   const addToQueue = (song: Song) => {
     const ps = toPlayerSong(song);
-    // Allow the same song to be queued multiple times — always append
     setQueue((prev) => [...prev, ps]);
   };
 
@@ -286,35 +426,88 @@ export default function ResizableLayout({
   const itemCount =
     activeGenre === "Remix" ? filteredRemixes.length : filtered.length;
 
+  if (!mounted) return null;
+
   return (
     <div
       ref={containerRef}
-      className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background"
+      className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background relative"
     >
+      {/* Lobby confirmation modal */}
+      {showConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card p-8 rounded-[32px] border border-border text-center max-w-sm">
+            <h3 className="text-xl font-black uppercase italic mb-2">
+              Start Lobby?
+            </h3>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-3 rounded-2xl bg-muted font-bold text-xs uppercase"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLobby}
+                className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground font-bold text-xs uppercase"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ───── Main Content ───── */}
-      <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-0">
-        <div className="mx-auto px-8 lg:px-12 py-8 space-y-8 max-w-6xl">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="shrink-0 border-b bg-background z-20 p-4 lg:p-6 pb-2 space-y-4">
+          {/* Lobby header */}
+          {!lobbyActive ? (
+            <div className="flex justify-between items-center">
               <Link
                 href="/"
-                className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1"
+                className="text-[10px] text-muted-foreground hover:underline uppercase font-bold tracking-tighter"
               >
-                ← Back to Home
+                ← Back
               </Link>
-              <h1 className="text-3xl font-black tracking-tighter uppercase italic mt-1">
-                Discover
-              </h1>
+              <button
+                onClick={() => setShowConfirm(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-[10px] uppercase shadow-md hover:scale-105 transition-transform"
+              >
+                <Users className="size-3" /> Start Lobby
+              </button>
             </div>
-            <Link
-              href="/party"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs uppercase tracking-wide hover:bg-primary/90 transition-all shrink-0"
-            >
-              <Users className="size-4" />
-              Start Lobby
-            </Link>
-          </div>
+          ) : (
+            <div className="bg-muted/30 p-3 rounded-[20px] border border-border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary italic">
+                  Live Stage
+                </span>
+                <button
+                  onClick={copyInvite}
+                  className="flex items-center gap-2 px-2 py-1 bg-background rounded-lg border border-border hover:bg-accent transition-all"
+                >
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase">
+                    Invite
+                  </span>
+                  {copied ? (
+                    <Check size={10} className="text-emerald-500" />
+                  ) : (
+                    <Copy size={10} className="text-muted-foreground" />
+                  )}
+                </button>
+              </div>
+              <div className="h-[200px] bg-black rounded-xl overflow-hidden border border-border relative">
+                {token === "" ? (
+                  <div className="h-full flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                    <Loader2 className="animate-spin text-primary" size={20} />
+                  </div>
+                ) : (
+                  <VideoStage token={token} />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Genre pills */}
           <div className="flex gap-2 flex-wrap">
@@ -352,8 +545,10 @@ export default function ResizableLayout({
               {itemCount} {itemCount === 1 ? "item" : "items"}
             </p>
           </div>
+        </div>
 
-          {/* Song grid */}
+        {/* Song grid */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-2">
           {itemCount === 0 ? (
             <div className="py-16 text-center border-2 border-dashed rounded-2xl bg-muted/20">
               <p className="text-muted-foreground font-medium">
@@ -405,7 +600,12 @@ export default function ResizableLayout({
                           </p>
                         </Link>
                         <button
-                          onClick={() => setQueue((prev) => [...prev, toRemixPlayerSong(item)])}
+                          onClick={() =>
+                            setQueue((prev) => [
+                              ...prev,
+                              toRemixPlayerSong(item),
+                            ])
+                          }
                           className="shrink-0 mt-0.5 p-1 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
                           title="Add to queue"
                         >
@@ -421,7 +621,6 @@ export default function ResizableLayout({
 
                     return (
                       <div key={song.id} className="group">
-                        {/* Card */}
                         <button
                           onClick={() => playSong(song)}
                           className="w-full text-left"
@@ -441,19 +640,16 @@ export default function ResizableLayout({
                               </div>
                             )}
 
-                            {/* Duration badge */}
                             <Badge className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-mono border-none px-1.5 py-0.5">
                               {formatDuration(song.duration_seconds)}
                             </Badge>
 
-                            {/* Playing indicator */}
                             {isPlaying && (
                               <Badge className="absolute top-1.5 left-1.5 bg-primary text-primary-foreground text-[10px] border-none">
                                 ♪ Playing
                               </Badge>
                             )}
 
-                            {/* Content rating */}
                             {!isPlaying && song.is_child_safe && (
                               <div className="absolute top-1.5 left-1.5">
                                 <Badge className="bg-emerald-600 text-white text-[10px] font-bold border-none px-1.5 py-0.5 flex items-center gap-0.5">
@@ -462,7 +658,6 @@ export default function ResizableLayout({
                               </div>
                             )}
 
-                            {/* Hover overlay with play button */}
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                               <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
                                 <Play className="size-5 text-black fill-black ml-0.5" />
@@ -471,7 +666,6 @@ export default function ResizableLayout({
                           </div>
                         </button>
 
-                        {/* Info + add to queue */}
                         <div className="flex items-start justify-between gap-1">
                           <Link
                             href={`/songs/${song.id}`}
@@ -493,7 +687,6 @@ export default function ResizableLayout({
                           </button>
                         </div>
 
-                        {/* Remix count */}
                         {remixCount > 0 && (
                           <div className="flex items-center gap-1 mt-1">
                             <Sparkles className="size-3 text-primary" />
@@ -509,11 +702,11 @@ export default function ResizableLayout({
             </div>
           )}
         </div>
-      </main>
+      </div>
 
       {/* ───── Draggable Divider ───── */}
       <div
-        onMouseDown={handleMouseDown}
+        onMouseDown={() => setIsResizing(true)}
         className={`w-1 hover:bg-primary/50 cursor-col-resize transition-colors ${
           isResizing ? "bg-primary/50" : "bg-border"
         }`}

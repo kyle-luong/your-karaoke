@@ -171,7 +171,7 @@ export function useLobbySync({
                             role: p.userId === hostId ? "host" : "guest",
                             isMuted: p.isMuted,
                             hasVideo: p.hasVideo,
-                            stream: p.userId === userId ? localStream : remoteStreams[p.userId],
+                            stream: p.userId === userId ? localStream ?? undefined : remoteStreams[p.userId],
                         });
                     }
                 });
@@ -211,7 +211,7 @@ export function useLobbySync({
     useEffect(() => {
         setMembers(prev => prev.map(m => ({
             ...m,
-            stream: m.userId === userId ? localStream : remoteStreams[m.userId]
+            stream: m.userId === userId ? localStream ?? undefined : remoteStreams[m.userId]
         })));
     }, [localStream, remoteStreams, userId]);
 
