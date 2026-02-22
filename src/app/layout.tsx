@@ -14,16 +14,19 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Navbar userEmail={user?.email} />
+        <Navbar 
+          userEmail={user?.email} 
+          userImage={user?.user_metadata?.avatar_url} 
+        />
         {children}
       </body>
     </html>
