@@ -5,7 +5,13 @@ import { nanoid } from "nanoid";
 export async function POST(request: Request) {
   const { versionId, hostUserId } = await request.json();
   const supabase = createAdminClient();
-  const inviteCode = nanoid(8);
+  // Generate a human-readable 6-character uppercase code (e.g. K-X24Z)
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous 0, O, 1, I, S, 5
+  let inviteCode = '';
+  for (let i = 0; i < 6; i++) {
+    inviteCode += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    if (i === 2) inviteCode += '-'; // Add a dash for readability
+  }
 
   const { data: party, error } = await supabase
     .from("parties")
